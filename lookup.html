@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Runner History · Superior 100 Spectator Guide</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← Home</a>
+      <div class="header-eyebrow">Superior Hiking Trail</div>
+      <h1>Runner <span class="header-accent">History</span></h1>
+      <p class="header-sub">Search for any runner to see their split times at every checkpoint.</p>
+    </div>
+  </header>
+
+  <main id="lookup-app">
+
+    <div id="lookup-loading" class="loading-screen">
+      <div class="spinner"></div>
+      <p>Loading runner data…</p>
+    </div>
+
+    <div id="lookup-ui" class="hidden">
+
+      <!-- Search -->
+      <div class="card search-card">
+        <label class="section-title" for="name-search">Search by name</label>
+        <div class="search-wrap">
+          <input type="text" id="name-search" class="search-input" placeholder="Matthew Robertson" autocomplete="off" autocorrect="off" spellcheck="false">
+        </div>
+        <div id="search-results" class="search-results hidden"></div>
+      </div>
+
+      <!-- Runner detail -->
+      <div id="runner-detail" class="hidden">
+        <div class="card runner-header-card">
+            <div class="runner-title-row">
+            <h2 id="runner-name" class="runner-name"></h2>
+            <div id="year-tabs" class="year-tabs"></div>
+          </div>
+          <div id="runner-finish" class="runner-finish hidden"></div>
+        </div>
+        <div class="card table-card">
+          <div class="table-scroll">
+            <table class="pred-table history-table">
+              <thead>
+                <tr>
+                  <th>Checkpoint</th>
+                  <th>Miles</th>
+                  <th>Arrival</th>
+                  <th>Segment</th>
+                </tr>
+              </thead>
+              <tbody id="history-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Year comparison chart (multi-year runners only) -->
+        <div id="year-chart-card" class="card chart-card hidden">
+          <h3 class="chart-title">Year over year</h3>
+          <div class="chart-wrap chart-wrap-tall">
+            <canvas id="year-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Using data from 2014–2025 Superior 100 races (no 2020)</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="js/lookup.js"></script>
+</body>
+</html>

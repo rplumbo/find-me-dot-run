@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predict Arrivals · Superior 100 Spectator Guide</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← Home</a>
+      <div class="header-eyebrow">Superior Hiking Trail</div>
+      <h1>Superior 100 <span class="header-accent">Spectator Guide</span></h1>
+      <p class="header-sub">Tell us where you saw your runner and we'll estimate when they'll reach each upcoming checkpoint.</p>
+    </div>
+  </header>
+
+  <main id="app">
+
+    <!-- Loading -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="spinner"></div>
+      <p>Loading race data…</p>
+    </div>
+
+    <!-- Input section -->
+    <section id="input-section" class="section hidden">
+      <div class="card">
+        <h2 class="section-title">Where did you last see your runner?</h2>
+        <p class="section-desc">
+          Enter a checkpoint and the time your runner came through. Add more sightings if you
+          have them — each one narrows the prediction. We're drawing on 2,500+ runners from
+          10 years of race history.
+        </p>
+
+        <div id="observations-container"></div>
+
+        <button id="add-obs-btn" class="btn btn-ghost add-obs-btn">
+          <span class="btn-icon">+</span> Add Another Sighting
+        </button>
+      </div>
+
+      <div id="input-error" class="error-banner hidden"></div>
+
+      <button id="predict-btn" class="btn btn-primary predict-btn">
+        Predict Arrival Times →
+      </button>
+    </section>
+
+    <!-- Results section -->
+    <section id="results-section" class="section hidden">
+
+      <div id="next-station-card" class="card next-card">
+        <!-- Filled dynamically -->
+      </div>
+
+      <div class="card chart-card">
+        <h3 id="chart-title" class="chart-title"></h3>
+        <p id="chart-subtitle" class="chart-subtitle"></p>
+        <div class="chart-wrap">
+          <canvas id="prediction-chart"></canvas>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><span class="swatch swatch-80"></span><span>80% of runners</span></div>
+          <div class="legend-item"><span class="swatch swatch-50"></span><span>50% of runners</span></div>
+          <div class="legend-item"><span class="swatch swatch-line"></span><span>Median</span></div>
+        </div>
+      </div>
+
+      <div class="card table-card">
+        <h3 class="section-title">All Upcoming Checkpoints</h3>
+        <p class="section-desc" id="sample-note"></p>
+        <div class="table-scroll">
+          <table class="pred-table">
+            <thead>
+              <tr>
+                <th>Checkpoint</th>
+                <th>Miles</th>
+                <th>Median</th>
+                <th>Early (10%)</th>
+                <th>Late (90%)</th>
+              </tr>
+            </thead>
+            <tbody id="pred-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <button id="reset-btn" class="btn btn-ghost reset-btn">← Start Over</button>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p id="footer-note">Using data from 2014–2025 Superior 100 races</p>
+    <p>Race start: 8:00 AM · All times are estimates based on historical patterns</p>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

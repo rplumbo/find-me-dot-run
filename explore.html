@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explore the Race · Superior 100 Spectator Guide</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← Home</a>
+      <div class="header-eyebrow">Superior Hiking Trail</div>
+      <h1>Explore <span class="header-accent">the Race</span></h1>
+      <p class="header-sub">Records, finish times, and how the field spreads out — built from 10 years of race data.</p>
+    </div>
+  </header>
+
+  <main id="explore-app">
+
+    <div id="explore-loading" class="loading-screen">
+      <div class="spinner"></div>
+      <p>Loading race data…</p>
+    </div>
+
+    <div id="explore-ui" class="hidden">
+
+      <!-- Stat cards -->
+      <div class="stat-grid" id="stat-grid"></div>
+
+      <!-- Top 10 finishes -->
+      <div class="card table-card" style="margin-top: 1rem;">
+        <h3 class="section-title">Top 10 Finishes</h3>
+        <div class="table-scroll">
+          <table class="pred-table">
+            <thead>
+              <tr>
+                <th style="text-align:left">Name</th>
+                <th>Year</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="top10-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Finish time histogram -->
+      <div class="card chart-card">
+        <h3 class="chart-title">When do runners finish?</h3>
+        <div class="chart-wrap chart-wrap-tall">
+          <canvas id="finish-histogram"></canvas>
+        </div>
+      </div>
+
+      <!-- Spread chart -->
+      <div class="card chart-card">
+        <h3 class="chart-title">How the field spreads out</h3>
+        <div class="chart-wrap chart-wrap-tall">
+          <canvas id="spread-chart"></canvas>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><span class="swatch swatch-line"></span><span>Typical runner</span></div>
+          <div class="legend-item"><span class="swatch swatch-50"></span><span>Half of all runners</span></div>
+          <div class="legend-item"><span class="swatch swatch-80"></span><span>Most runners</span></div>
+          <div class="legend-item"><span class="swatch swatch-night"></span><span>Night (8 PM – 6 AM)</span></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>Using data from 2014–2025 Superior 100 races (no 2020)</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="js/explore.js?v=7"></script>
+</body>
+</html>
