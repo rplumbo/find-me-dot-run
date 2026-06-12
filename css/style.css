@@ -505,6 +505,20 @@ select {
 .pred-table tr.pace-finish-row td { background: rgba(34,197,94,0.06); }
 .pred-table tr.pace-finish-row .td-station { color: var(--accent); font-weight: 600; }
 
+/* Pace chart: keep the checkpoint name pinned while the times scroll sideways.
+   The pinned cell needs an opaque background to cover columns sliding under it. */
+#pace-table th:first-child,
+#pace-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
+  box-shadow: 1px 0 0 var(--border);
+}
+#pace-table tr:hover td:first-child { background: var(--surface2); }
+/* finish row: solid equivalent of surface + the green tint (rgba can't cover) */
+#pace-table tr.pace-finish-row td:first-child { background: #132b18; }
+
 /* ─────────────────────────────────────────────
    Footer
 ───────────────────────────────────────────── */
