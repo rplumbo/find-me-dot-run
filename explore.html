@@ -68,6 +68,18 @@
         </div>
       </div>
 
+      <!-- Pace chart: typical splits by finish time -->
+      <div class="card table-card" style="margin-top: 1rem;">
+        <h3 class="section-title">Splits for a target finish time</h3>
+        <p class="section-sub">If your runner is on pace for a given finish, here's roughly when they'd reach each checkpoint — drawn from past finishers who came in around that time.</p>
+        <div class="table-scroll">
+          <table class="pred-table" id="pace-table">
+            <thead><tr id="pace-head"></tr></thead>
+            <tbody id="pace-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </main>
 
@@ -76,6 +88,6 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <script src="js/explore.js?v=7"></script>
+  <script src="js/explore.js?v=8"></script>
 </body>
 </html>

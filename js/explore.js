@@ -36,6 +36,97 @@ function elapsedToTimeOfDay(h) {
   return `${h12} ${ampm}`;
 }
 
+function minToClockObj(minutesFromStart) {
+  const total     = RACE_START_MIN + Math.round(minutesFromStart);
+  const dayOffset = Math.floor(total / 1440);
+  const h24       = Math.floor(total / 60) % 24;
+  const m         = total % 60;
+  const ampm      = h24 >= 12 ? 'PM' : 'AM';
+  const h12       = h24 % 12 === 0 ? 12 : h24 % 12;
+  const day       = dayOffset === 0 ? 'Fri' : dayOffset === 1 ? 'Sat' : 'Sun';
+  return { display: `${h12}:${String(m).padStart(2,'0')} ${ampm}`, day };
+}
+
+// ─────────────────────────────────────────────
+//  Pace chart — typical splits for a target finish time
+// ─────────────────────────────────────────────
+
+// Target finish times to profile (hours from the 8 AM start).
+const FINISH_TARGETS_HRS = [24, 26, 28, 30, 32, 34, 36, 38];
+
+// Same Gaussian bandwidth (minutes) the prediction tool uses.
+const PACE_BANDWIDTH = 30;
+
+function gaussianWeight(diff) {
+  return Math.exp(-0.5 * (diff / PACE_BANDWIDTH) ** 2);
+}
+
+function weightedMedian(pairs) {
+  // pairs: [value, weight]; returns the weighted median value, or null if empty.
+  const sorted = pairs.slice().sort((a, b) => a[0] - b[0]);
+  const totalW = sorted.reduce((s, p) => s + p[1], 0);
+  if (totalW <= 0) return null;
+  let cum = 0;
+  for (const [v, w] of sorted) {
+    cum += w;
+    if (cum / totalW >= 0.5) return v;
+  }
+  return sorted[sorted.length - 1][0];
+}
+
+/**
+ * Typical splits for a runner finishing around `targetMin` minutes.
+ *
+ * Condition on the finish (station 13) using the same joint-kernel idea as the
+ * prediction tool — here with a single observation — then take the weighted
+ * median split at every station over finishers near the target. Returns an
+ * array of 14 minutes-from-start values (null where no station data).
+ */
+function typicalSplits(targetMin) {
+  const splits = [];
+  for (let k = 0; k < model.stations.length; k++) {
+    const pairs = [];
+    for (const r of model.runners) {
+      const f = r[13];
+      if (f === null) continue;                 // need a finish to condition on
+      const w = gaussianWeight(f - targetMin);
+      if (w < 1e-9) continue;
+      const v = r[k];
+      if (v === null) continue;                 // runner has no split here
+      pairs.push([v, w]);
+    }
+    splits.push(weightedMedian(pairs));
+  }
+  return splits;
+}
+
+function renderPaceChart() {
+  const { stations } = model;
+  const targets = FINISH_TARGETS_HRS.map(h => ({ hrs: h, splits: typicalSplits(h * 60) }));
+
+  // Header: Checkpoint | Mile | one column per target finish time
+  document.getElementById('pace-head').innerHTML =
+    `<th>Checkpoint</th><th>Mile</th>` +
+    targets.map(t => `<th>${t.hrs} hr</th>`).join('');
+
+  // One row per station; finish row emphasized.
+  const tbody = document.getElementById('pace-tbody');
+  tbody.innerHTML = stations.map((s, k) => {
+    const isFinish = k === stations.length - 1;
+    const cells = targets.map(t => {
+      const v = t.splits[k];
+      if (v === null) return `<td class="td-range">—</td>`;
+      const c = minToClockObj(v);
+      return `<td>${c.display}<span class="day-tag-inline">${c.day}</span></td>`;
+    }).join('');
+    return `<tr${isFinish ? ' class="pace-finish-row"' : ''}>
+        <td class="td-station">${s.name}</td>
+        <td class="td-range">${s.distance}</td>
+        ${cells}
+      </tr>`;
+  }).join('');
+}
+
 // ─────────────────────────────────────────────
 //  Stat cards
 // ─────────────────────────────────────────────
@@ -293,6 +384,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   renderStats();
   renderTopTen();
+  renderPaceChart();
   requestAnimationFrame(() => {
     renderSpreadChart();
     renderFinishHistogram();
