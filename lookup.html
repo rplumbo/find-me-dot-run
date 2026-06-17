@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Runner History · Superior 100 Spectator Guide</title>
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
 
@@ -30,7 +30,13 @@
       <div class="card search-card">
         <label class="section-title" for="name-search">Search by name</label>
         <div class="search-wrap">
-          <input type="text" id="name-search" class="search-input" placeholder="Matthew Robertson" autocomplete="off" autocorrect="off" spellcheck="false">
+          <span class="search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"/>
+              <line x1="16.5" y1="16.5" x2="21" y2="21"/>
+            </svg>
+          </span>
+          <input type="text" id="name-search" class="search-input" placeholder="Search any runner by name…" autocomplete="off" autocorrect="off" spellcheck="false">
         </div>
         <div id="search-results" class="search-results hidden"></div>
       </div>

@@ -1050,8 +1050,10 @@ select {
 }
 
 /* Search field — a magnifier marks it clearly as a search box, not a result row */
-#compare-app .search-wrap { position: relative; }
-#compare-app .search-input { padding-left: 2.5rem; }
+#compare-app .search-wrap,
+#lookup-app .search-wrap { position: relative; }
+#compare-app .search-input,
+#lookup-app .search-input { padding-left: 2.5rem; }
 
 .search-icon {
   position: absolute;
