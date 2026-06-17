@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compare Runners · Superior 100 Spectator Guide</title>
+  <link rel="stylesheet" href="css/style.css?v=3">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← Home</a>
+      <div class="header-eyebrow">Superior Hiking Trail</div>
+      <h1>Compare <span class="header-accent">Runners</span></h1>
+      <p class="header-sub">Put two or three races side by side — any runner, any year — and see who moved faster, and where.</p>
+    </div>
+  </header>
+
+  <main id="compare-app">
+
+    <div id="compare-loading" class="loading-screen">
+      <div class="spinner"></div>
+      <p>Loading runner data…</p>
+    </div>
+
+    <div id="compare-ui" class="hidden">
+
+      <!-- Selection -->
+      <div class="card search-card">
+        <h2 class="section-title">Choose races to compare</h2>
+        <p class="section-desc">
+          Search for a runner and tap a year to add that race. Compare up to three —
+          across different runners and seasons.
+        </p>
+
+        <div id="selected-races" class="selected-races"></div>
+
+        <div class="search-wrap">
+          <input type="text" id="name-search" class="search-input" placeholder="Search any runner…" autocomplete="off" autocorrect="off" spellcheck="false">
+        </div>
+        <p id="cmp-hint" class="section-sub hidden"></p>
+        <div id="search-results" class="search-results hidden"></div>
+      </div>
+
+      <!-- Results -->
+      <div id="compare-results" class="hidden">
+
+        <div class="card chart-card">
+          <h3 class="chart-title">Elapsed time at each checkpoint</h3>
+          <p id="compare-subtitle" class="chart-subtitle"></p>
+          <div class="chart-wrap chart-wrap-tall">
+            <canvas id="compare-chart"></canvas>
+          </div>
+        </div>
+
+        <div class="card table-card">
+          <h3 class="section-title">Arrival times side by side</h3>
+          <p class="section-sub">When each runner reached every checkpoint. All races start at 8:00 AM Friday.</p>
+          <div class="table-scroll">
+            <table class="pred-table" id="compare-table">
+              <thead><tr id="compare-head"></tr></thead>
+              <tbody id="compare-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Using data from 2014–2025 Superior 100 races (no 2020)</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="js/compare.js?v=1"></script>
+</body>
+</html>
