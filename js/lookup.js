@@ -137,7 +137,7 @@ function selectRunner(runnerData) {
   activeYear   = runnerData.entries[runnerData.entries.length - 1].year; // default: most recent
 
   document.getElementById('search-results').classList.add('hidden');
-  document.getElementById('name-search').value = runnerData.displayName;
+  document.getElementById('name-search').value = ''; // clear the search after a pick (runner name shows in the detail header)
   document.getElementById('runner-name').textContent = runnerData.displayName;
   document.getElementById('runner-detail').classList.remove('hidden');
 
