@@ -1049,6 +1049,21 @@ select {
   padding: 0.1rem 0 0.4rem;
 }
 
+/* Search field — a magnifier marks it clearly as a search box, not a result row */
+#compare-app .search-wrap { position: relative; }
+#compare-app .search-input { padding-left: 2.5rem; }
+
+.search-icon {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.search-icon svg { width: 16px; height: 16px; }
+
 .cmp-chip {
   display: flex;
   align-items: center;

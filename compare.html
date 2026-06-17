@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Compare Runners · Superior 100 Spectator Guide</title>
-  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/style.css?v=4">
 </head>
 <body>
 
@@ -36,8 +36,14 @@
 
         <div id="selected-races" class="selected-races"></div>
 
-        <div class="search-wrap">
-          <input type="text" id="name-search" class="search-input" placeholder="Search any runner…" autocomplete="off" autocorrect="off" spellcheck="false">
+        <div id="search-block" class="search-wrap">
+          <span class="search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"/>
+              <line x1="16.5" y1="16.5" x2="21" y2="21"/>
+            </svg>
+          </span>
+          <input type="text" id="name-search" class="search-input" placeholder="Search any runner by name…" autocomplete="off" autocorrect="off" spellcheck="false">
         </div>
         <p id="cmp-hint" class="section-sub hidden"></p>
         <div id="search-results" class="search-results hidden"></div>
@@ -76,6 +82,6 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <script src="js/compare.js?v=1"></script>
+  <script src="js/compare.js?v=2"></script>
 </body>
 </html>

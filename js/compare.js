@@ -89,6 +89,14 @@ function isSelected(key, year) {
 
 function handleSearch(query) {
   const resultsEl = document.getElementById('search-results');
+
+  // At the limit there's nothing left to add — the search is hidden, show nothing.
+  if (selected.length >= MAX_RACES) {
+    resultsEl.classList.add('hidden');
+    resultsEl.innerHTML = '';
+    return;
+  }
+
   const q = query.trim().toLowerCase();
 
   if (q.length < 2) {
@@ -110,13 +118,10 @@ function handleSearch(query) {
     return;
   }
 
-  const atMax = selected.length >= MAX_RACES;
-
   resultsEl.innerHTML = matches.slice(0, 40).map(([key, val]) => {
     const pills = val.entries.map(e => {
-      const sel      = isSelected(key, e.year);
-      const disabled = sel || atMax;
-      return `<button class="year-tab cmp-year-pill${sel ? ' active' : ''}" data-key="${key}" data-year="${e.year}"${disabled ? ' disabled' : ''}>${e.year}</button>`;
+      const sel = isSelected(key, e.year); // already chosen → show as active, not re-addable
+      return `<button class="year-tab cmp-year-pill${sel ? ' active' : ''}" data-key="${key}" data-year="${e.year}"${sel ? ' disabled' : ''}>${e.year}</button>`;
     }).join('');
     return `<div class="cmp-result-row">
       <span class="result-name">${val.displayName}</span>
@@ -142,6 +147,7 @@ function addRace(key, year) {
   if (!entry) return;
 
   selected.push({ key, displayName: val.displayName, year, splits: entry.splits });
+  document.getElementById('name-search').value = ''; // clear so the pick lands as a chip, not lingering search text
   refresh();
 }
 
@@ -186,11 +192,17 @@ function renderSelected() {
     });
   }
 
-  const hint = document.getElementById('cmp-hint');
+  // At the limit, drop the search entirely (nothing more to add) and explain why.
+  const searchBlock = document.getElementById('search-block');
+  const results     = document.getElementById('search-results');
+  const hint        = document.getElementById('cmp-hint');
   if (atMax) {
+    searchBlock.classList.add('hidden');
+    results.classList.add('hidden');
     hint.textContent = "That's three races — remove one to add another.";
     hint.classList.remove('hidden');
   } else {
+    searchBlock.classList.remove('hidden');
     hint.classList.add('hidden');
   }
 }
