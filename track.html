@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Track Runner · Superior 100 Spectator Guide</title>
-  <link rel="stylesheet" href="css/style.css?v=19">
+  <link rel="stylesheet" href="css/style.css?v=22">
 </head>
 <body>
 
@@ -53,32 +53,23 @@
             <h2 class="section-title">Aid Stations</h2>
             <p id="checkpoint-plan-note" class="section-desc">Add a sighting to replace estimates with actual times.</p>
           </div>
-          <label id="prediction-window-control" class="track-range-control hidden" for="prediction-window-select">
-            <span>Range</span>
-            <select id="prediction-window-select">
-              <option value="100">Max 100%</option>
-              <option value="80">Safer 80%</option>
-              <option value="50">Tighter 50%</option>
-            </select>
-          </label>
+          <div class="track-head-controls">
+            <label id="compare-year-control" class="track-range-control hidden" for="compare-year-select">
+              <span>Compare To</span>
+              <select id="compare-year-select"></select>
+            </label>
+            <label id="prediction-window-control" class="track-range-control hidden" for="prediction-window-select">
+              <span>Range</span>
+              <select id="prediction-window-select">
+                <option value="100">Max 100%</option>
+                <option value="80">Safer 80%</option>
+                <option value="50">Tighter 50%</option>
+              </select>
+            </label>
+          </div>
         </div>
         <p id="checkpoint-action-note" class="checkpoint-action-note hidden">Tap an entry to record actual sightings of your runner. Otherwise, estimates are shown.</p>
         <div id="checkpoint-plan-list" class="checkpoint-plan"></div>
-      </section>
-
-      <section id="history-section" class="card hidden">
-        <h2 class="section-title">Runner History</h2>
-        <div id="history-summary" class="track-history-summary"></div>
-        <div id="history-comparison" class="track-list"></div>
-        <details class="track-history-details">
-          <summary>All historical results</summary>
-          <div id="history-results" class="track-list"></div>
-        </details>
-      </section>
-
-      <section id="empty-history-section" class="card hidden">
-        <h2 class="section-title">Runner History</h2>
-        <p class="section-desc">No prior Superior 100 history is saved for this runner. Forecasts still use the full historical field.</p>
       </section>
 
     </div>
@@ -123,6 +114,6 @@
   </footer>
 
   <script src="js/sw-register.js"></script>
-  <script src="js/track.js?v=20"></script>
+  <script src="js/track.js?v=22"></script>
 </body>
 </html>

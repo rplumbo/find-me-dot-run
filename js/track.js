@@ -12,6 +12,7 @@ let runnersByName = new Map();
 let selectedRunner = null;
 let sightings = [];
 let predictionWindow = '80';
+let compareYear = null;
 let RACE_START_HOUR = 8;
 let AID_STATIONS = [];
 
@@ -60,9 +61,11 @@ function loadState() {
     if (state.version !== 1) return;
     selectedRunner = state.selectedRunner || null;
     sightings = Array.isArray(state.sightings) ? state.sightings : [];
+    compareYear = Number.isInteger(state.compareYear) ? state.compareYear : null;
   } catch {
     selectedRunner = null;
     sightings = [];
+    compareYear = null;
   }
 }
 
@@ -71,6 +74,7 @@ function saveState() {
     version: 1,
     selectedRunner,
     sightings,
+    compareYear,
     savedAt: new Date().toISOString(),
   }));
 }
@@ -140,19 +144,11 @@ function minToClockStr(minutesFromStart) {
   return `${o.display} <span class="day-tag-inline">${o.day}</span>`;
 }
 
-function minToElapsed(minutesFromStart) {
-  if (minutesFromStart === null) return 'DNF';
-  const h = Math.floor(minutesFromStart / 60);
-  const m = minutesFromStart % 60;
-  return `${h}:${String(m).padStart(2, '0')}`;
-}
-
-function minToSeg(minutes) {
+function minToDifference(minutes) {
   const abs = Math.abs(Math.round(minutes));
   const h = Math.floor(abs / 60);
   const m = abs % 60;
-  const text = h ? `${h}h ${m}m` : `${m}m`;
-  return minutes < 0 ? `${text} faster` : `${text} slower`;
+  return h ? `${h}h ${m}m` : `${m}m`;
 }
 
 function clockDropdownToMinutes(h12, minVal, ampm, dayOffset) {
@@ -210,6 +206,12 @@ function setupControls() {
     renderCheckpointPlan();
   });
 
+  document.getElementById('compare-year-select').addEventListener('change', event => {
+    compareYear = parseInt(event.target.value, 10);
+    saveState();
+    renderCheckpointPlan();
+  });
+
   document.getElementById('sighting-station').addEventListener('change', () => {
     const idx = parseInt(document.getElementById('sighting-station').value, 10);
     setTimeSelectsFromMinutes(model.stationStats[idx]?.p50 || 0);
@@ -228,12 +230,49 @@ function runnerHistory() {
   return runnersByName.get(selectedRunner.key) || null;
 }
 
+function syncCompareYear() {
+  const history = runnerHistory();
+  if (!history || !history.entries.length) {
+    compareYear = null;
+    return;
+  }
+  if (!history.entries.some(entry => entry.year === compareYear)) {
+    compareYear = history.entries[history.entries.length - 1].year;
+  }
+}
+
+function comparisonEntry() {
+  const history = runnerHistory();
+  if (!history) return null;
+  syncCompareYear();
+  return history.entries.find(entry => entry.year === compareYear) || null;
+}
+
+function actualComparison(sighting) {
+  const entry = comparisonEntry();
+  if (!entry) return null;
+
+  const comparisonTime = entry.splits[sighting.stationIndex];
+  if (comparisonTime === null || comparisonTime === undefined) return null;
+
+  const delta = sighting.minutesFromStart - comparisonTime;
+  if (delta === 0) {
+    return { text: `Same as ${entry.year}`, tone: 'neutral' };
+  }
+
+  return {
+    text: `${minToDifference(delta)} ${delta < 0 ? 'faster' : 'slower'} vs ${entry.year}`,
+    tone: delta < 0 ? 'faster' : 'slower',
+  };
+}
+
 function selectHistoricalRunner(runner) {
   selectedRunner = {
     key: runner.key,
     name: runner.displayName,
     kind: 'historical',
   };
+  compareYear = runner.entries[runner.entries.length - 1]?.year || null;
   saveState();
   render();
 }
@@ -245,12 +284,14 @@ function selectFirstTimeRunner(name = '') {
     name: cleanName || 'First Time Runner',
     kind: 'first-time',
   };
+  compareYear = null;
   saveState();
   render();
 }
 
 function resetRunnerPicker() {
   selectedRunner = null;
+  compareYear = null;
   saveState();
   render();
   document.getElementById('runner-search').focus();
@@ -437,9 +478,23 @@ function predictionRange(pred) {
 function renderCheckpointPlan() {
   const list = document.getElementById('checkpoint-plan-list');
   const note = document.getElementById('checkpoint-plan-note');
+  const compareControl = document.getElementById('compare-year-control');
+  const compareSelect = document.getElementById('compare-year-select');
+  const history = runnerHistory();
   const lastIdx = latestStationIndex();
   const actualByStation = new Map(sightings.map(s => [s.stationIndex, s]));
   const nextIdx = lastIdx >= 0 ? lastIdx + 1 : -1;
+
+  syncCompareYear();
+  if (history) {
+    compareSelect.innerHTML = history.entries.slice().reverse().map(entry =>
+      `<option value="${entry.year}">${entry.year}</option>`
+    ).join('');
+    compareSelect.value = String(compareYear);
+  } else {
+    compareSelect.innerHTML = '';
+  }
+  compareControl.classList.toggle('hidden', !history);
 
   let noteText = '';
   if (!selectedRunner) {
@@ -466,6 +521,7 @@ function renderCheckpointPlan() {
     const actual = actualByStation.get(stationIndex);
     const markAttrs = selectedRunner ? ` data-mark-station="${stationIndex}" role="button" tabindex="0"` : '';
     if (actual) {
+      const comparison = actualComparison(actual);
       return `<div class="checkpoint-row is-actual"${markAttrs}>
         <div>
           <div class="checkpoint-name">${escapeHtml(station.name)}</div>
@@ -473,6 +529,7 @@ function renderCheckpointPlan() {
         </div>
         <div class="checkpoint-time">
           <div class="checkpoint-main">${minToClockStr(actual.minutesFromStart)}</div>
+          ${comparison ? `<div class="checkpoint-compare is-${comparison.tone}">${escapeHtml(comparison.text)}</div>` : ''}
         </div>
         <button class="track-icon-btn" data-remove-station="${stationIndex}" title="Remove sighting">×</button>
       </div>`;
@@ -540,102 +597,9 @@ function renderCheckpointPlan() {
   });
 }
 
-function median(values) {
-  const sorted = values.slice().sort((a, b) => a - b);
-  if (!sorted.length) return null;
-  return sorted[Math.floor(sorted.length / 2)];
-}
-
-function renderHistory() {
-  const historySection = document.getElementById('history-section');
-  const emptySection = document.getElementById('empty-history-section');
-  const history = runnerHistory();
-
-  if (!selectedRunner) {
-    historySection.classList.add('hidden');
-    emptySection.classList.add('hidden');
-    return;
-  }
-
-  if (!history) {
-    historySection.classList.add('hidden');
-    emptySection.classList.remove('hidden');
-    return;
-  }
-
-  emptySection.classList.add('hidden');
-  historySection.classList.remove('hidden');
-
-  const finishes = history.entries.map(e => e.splits[13]).filter(t => t !== null);
-  const best = finishes.length ? Math.min(...finishes) : null;
-  const latest = history.entries[history.entries.length - 1];
-
-  document.getElementById('history-summary').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-value">${history.entries.length}</div>
-      <div class="stat-label">Starts</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${finishes.length}</div>
-      <div class="stat-label">Finishes</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${best === null ? 'DNF' : minToElapsed(best)}</div>
-      <div class="stat-label">Best</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${latest.year}</div>
-      <div class="stat-label">Latest Run</div>
-    </div>`;
-
-  const comparison = sightings.map(s => {
-    const values = history.entries.map(e => e.splits[s.stationIndex]).filter(t => t !== null);
-    const expectedSplit = median(values);
-    const station = AID_STATIONS[s.stationIndex];
-    if (expectedSplit === null) {
-      return `<div class="track-list-row">
-        <div>
-          <div class="track-row-title">${escapeHtml(station.name)}</div>
-          <div class="track-row-sub">No personal split history here</div>
-        </div>
-        <div class="track-row-main">${minToClockStr(s.minutesFromStart)}</div>
-      </div>`;
-    }
-    const delta = s.minutesFromStart - expectedSplit;
-    const deltaClass = delta <= 0 ? 'good' : 'slow';
-    return `<div class="track-list-row">
-      <div>
-        <div class="track-row-title">${escapeHtml(station.name)}</div>
-        <div class="track-row-sub">Expected from this runner's history ${minToClockStr(expectedSplit)}</div>
-      </div>
-      <div class="track-row-times">
-        <div class="track-row-main">${minToClockStr(s.minutesFromStart)}</div>
-        <div class="track-delta ${deltaClass}">${delta === 0 ? 'On expected pace' : minToSeg(delta)}</div>
-      </div>
-    </div>`;
-  }).join('');
-
-  document.getElementById('history-comparison').innerHTML = comparison ||
-    '<p class="section-desc">Add a sighting to compare today against this runner\'s historical checkpoints.</p>';
-
-  document.getElementById('history-results').innerHTML = history.entries.slice().reverse().map(entry => {
-    const finish = entry.splits[13] === null ? 'DNF' : minToElapsed(entry.splits[13]);
-    const lastSeenIdx = entry.splits.reduce((last, t, i) => t !== null ? i : last, -1);
-    const lastSeen = lastSeenIdx >= 0 ? AID_STATIONS[lastSeenIdx].name : 'No splits';
-    return `<div class="track-list-row">
-      <div>
-        <div class="track-row-title">${entry.year}</div>
-        <div class="track-row-sub">${escapeHtml(lastSeen)}</div>
-      </div>
-      <div class="track-row-main">${finish}</div>
-    </div>`;
-  }).join('');
-}
-
 function render() {
   renderSelectedRunner();
   renderCheckpointPlan();
-  renderHistory();
 }
 
 function bindEvents() {

@@ -132,9 +132,12 @@ function handleSearch(query) {
 //  Runner Detail
 // ─────────────────────────────────────────────
 
-function selectRunner(runnerData) {
+function selectRunner(runnerData, year = null) {
   activeRunner = runnerData;
-  activeYear   = runnerData.entries[runnerData.entries.length - 1].year; // default: most recent
+  const requestedYear = parseInt(year, 10);
+  activeYear = runnerData.entries.some(e => e.year === requestedYear)
+    ? requestedYear
+    : runnerData.entries[runnerData.entries.length - 1].year; // default: most recent
 
   document.getElementById('search-results').classList.add('hidden');
   document.getElementById('name-search').value = ''; // clear the search after a pick (runner name shows in the detail header)
@@ -145,6 +148,18 @@ function selectRunner(runnerData) {
   renderSplitsTable();
   renderYearChart();
   document.getElementById('runner-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function openRunnerFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const runnerName = params.get('runner');
+  if (!runnerName) return false;
+
+  const runner = runnersByName.get(runnerName.trim().toLowerCase());
+  if (!runner) return false;
+
+  selectRunner(runner, params.get('year'));
+  return true;
 }
 
 function renderYearTabs() {
@@ -287,5 +302,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const searchEl = document.getElementById('name-search');
   searchEl.addEventListener('input', e => handleSearch(e.target.value));
-  searchEl.focus();
+  if (!openRunnerFromUrl()) searchEl.focus();
 });

@@ -1745,10 +1745,20 @@ select {
 }
 
 .track-section-head {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+}
+
+.track-section-head > div:first-child {
+  min-width: 0;
+}
+
+.track-head-controls {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
+  align-items: flex-end;
+  gap: 0.5rem;
+  width: 100%;
 }
 
 .track-runner-actions {
@@ -1770,17 +1780,24 @@ select {
 }
 
 .track-range-control {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.45rem;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.22rem;
   color: var(--text-faint);
   font-size: 0.72rem;
   font-weight: 800;
   margin: 0;
 }
 
+.track-range-control span {
+  white-space: nowrap;
+}
+
 .track-range-control select {
+  width: 100%;
   min-height: 30px;
   padding: 0.28rem 1.55rem 0.28rem 0.5rem;
   border-radius: var(--radius-sm);
@@ -1926,6 +1943,8 @@ select {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 0.75rem;
+  color: inherit;
+  text-decoration: none;
 }
 
 .track-list-row.is-next {
@@ -1999,7 +2018,7 @@ select {
   font-size: 0.72rem;
   font-weight: 700;
   line-height: 1.4;
-  margin: 0 0 0.6rem;
+  margin: 0.2rem 0 0.6rem;
 }
 
 .checkpoint-time {
@@ -2035,6 +2054,18 @@ select {
   align-items: flex-end;
   text-align: right;
 }
+
+.checkpoint-compare {
+  color: var(--text-faint);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.checkpoint-compare.is-faster { color: var(--success); }
+.checkpoint-compare.is-slower { color: #fbbf24; }
+.checkpoint-compare.is-neutral { color: var(--text-muted); }
 
 .checkpoint-range {
   gap: 0.08rem;
@@ -2141,43 +2172,6 @@ select {
 .track-icon-btn:hover { border-color: var(--error); color: var(--error); }
 .checkpoint-row.is-actual .track-icon-btn:hover { border-color: transparent; }
 
-.track-history-summary {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.55rem;
-  margin-bottom: 0.85rem;
-}
-
-.track-history-summary .stat-card {
-  padding: 0.8rem;
-  border-radius: var(--radius-sm);
-}
-
-.track-history-summary .stat-value {
-  font-size: 1.25rem;
-}
-
-.track-delta {
-  font-size: 0.76rem;
-  font-weight: 700;
-}
-.track-delta.good { color: var(--success); }
-.track-delta.slow { color: #fbbf24; }
-
-.track-history-details {
-  margin-top: 0.85rem;
-  border-top: 1px solid var(--border);
-  padding-top: 0.85rem;
-}
-
-.track-history-details summary {
-  color: var(--text-muted);
-  font-size: 0.84rem;
-  font-weight: 700;
-  cursor: pointer;
-  margin-bottom: 0.75rem;
-}
-
 .sheet-backdrop {
   position: fixed;
   inset: 0;
@@ -2230,9 +2224,6 @@ select {
     grid-template-columns: 1.25fr 1.2fr 0.65fr;
     align-items: end;
   }
-
-  .track-history-summary { grid-template-columns: repeat(4, 1fr); }
-
   .track-runner-actions { flex-direction: row; }
 }
 
@@ -2242,7 +2233,10 @@ select {
     grid-template-columns: minmax(0, 1fr) auto;
   }
   .track-section-head {
-    align-items: center;
+    gap: 0.6rem;
+  }
+  .track-head-controls {
+    gap: 0.45rem;
   }
   .track-runner-actions {
     flex-direction: column;

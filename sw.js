@@ -1,4 +1,4 @@
-const CACHE_NAME = 's100-spectator-v23';
+const CACHE_NAME = 's100-spectator-v26';
 
 const CORE_ASSETS = [
   './',
