@@ -23,7 +23,7 @@ const AID_STATIONS = [
 
 // Up to three races; colors mirror the year-over-year chart palette in lookup.js.
 const MAX_RACES      = 3;
-const COMPARE_COLORS = ['#22c55e', '#60a5fa', '#f59e0b'];
+const COMPARE_COLORS = ['#f2c14e', '#7dd3fc', '#a78bfa'];
 
 // ─────────────────────────────────────────────
 //  State

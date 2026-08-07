@@ -332,7 +332,7 @@ function showResults(observations) {
         <div class="time-cell-value">${p10o.display}<span class="day-tag">${p10o.day}</span></div>
       </div>
       <div class="time-cell highlight">
-        <div class="time-cell-label">Median</div>
+        <div class="time-cell-label">Expected</div>
         <div class="time-cell-value">${p50o.display}<span class="day-tag">${p50o.day}</span></div>
       </div>
       <div class="time-cell">
@@ -407,22 +407,22 @@ function renderChart(result) {
         datasets: [
           {
             data: band80, fill: true,
-            backgroundColor: 'rgba(74,222,128,0.12)', borderColor: 'transparent',
+            backgroundColor: 'rgba(125,211,252,0.12)', borderColor: 'transparent',
             borderWidth: 0, pointRadius: 0, tension: 0.4, order: 3,
           },
           {
             data: band50, fill: true,
-            backgroundColor: 'rgba(74,222,128,0.30)', borderColor: 'transparent',
+            backgroundColor: 'rgba(242,193,78,0.24)', borderColor: 'transparent',
             borderWidth: 0, pointRadius: 0, tension: 0.4, order: 2,
           },
           {
             data: curve, fill: false,
-            borderColor: 'rgba(74,222,128,0.75)', borderWidth: 2,
+            borderColor: 'rgba(125,211,252,0.78)', borderWidth: 2,
             pointRadius: 0, tension: 0.4, order: 1,
           },
           {
             data: medLine, fill: false,
-            borderColor: '#22c55e', borderWidth: 2.5,
+            borderColor: '#f2c14e', borderWidth: 2.5,
             pointRadius: 0, order: 0,
           },
         ],
@@ -436,7 +436,7 @@ function renderChart(result) {
             mode: 'index', intersect: false,
             filter: item => item.datasetIndex === 3,
             callbacks: {
-              title: () => `Median: ${minToClockStr(p50)}`,
+              title: () => `Expected: ${minToClockStr(p50)}`,
               label: () => null,
             },
           },
@@ -446,7 +446,7 @@ function renderChart(result) {
             type: 'linear',
             min: curve[0].x, max: curve[curve.length - 1].x,
             ticks: {
-              color: '#86efac', maxTicksLimit: 8,
+              color: '#aab5af', maxTicksLimit: 8,
               callback: val => { const o = minToClockObj(val); return [o.display, o.day]; },
               font: { size: 11 },
             },

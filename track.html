@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Runner · Superior 100 Spectator Guide</title>
+  <link rel="stylesheet" href="css/style.css?v=19">
+</head>
+<body>
+
+  <header class="site-header track-header">
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← Home</a>
+      <h1>Track <span class="header-accent">Runner</span></h1>
+    </div>
+  </header>
+
+  <main id="track-app">
+
+    <div id="track-loading" class="loading-screen">
+      <div class="spinner"></div>
+      <p>Loading race data...</p>
+    </div>
+
+    <div id="track-ui" class="hidden">
+
+      <section class="card track-runner-card">
+        <div class="track-section-head">
+          <div>
+            <p id="runner-card-desc" class="section-desc">Search historical runners, or start a race-day track for someone new.</p>
+          </div>
+        </div>
+
+        <div id="runner-picker">
+          <div class="search-wrap">
+            <span class="search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7"/>
+                <line x1="16.5" y1="16.5" x2="21" y2="21"/>
+              </svg>
+            </span>
+            <input type="text" id="runner-search" class="search-input" placeholder="Search runner or type a new name" autocomplete="off" autocorrect="off" spellcheck="false">
+          </div>
+          <div id="runner-results" class="search-results hidden"></div>
+        </div>
+
+        <div id="selected-runner" class="hidden"></div>
+      </section>
+
+      <section id="checkpoint-plan-section" class="card">
+        <div class="track-section-head">
+          <div>
+            <h2 class="section-title">Aid Stations</h2>
+            <p id="checkpoint-plan-note" class="section-desc">Add a sighting to replace estimates with actual times.</p>
+          </div>
+          <label id="prediction-window-control" class="track-range-control hidden" for="prediction-window-select">
+            <span>Range</span>
+            <select id="prediction-window-select">
+              <option value="100">Max 100%</option>
+              <option value="80">Safer 80%</option>
+              <option value="50">Tighter 50%</option>
+            </select>
+          </label>
+        </div>
+        <p id="checkpoint-action-note" class="checkpoint-action-note hidden">Tap an entry to record actual sightings of your runner. Otherwise, estimates are shown.</p>
+        <div id="checkpoint-plan-list" class="checkpoint-plan"></div>
+      </section>
+
+      <section id="history-section" class="card hidden">
+        <h2 class="section-title">Runner History</h2>
+        <div id="history-summary" class="track-history-summary"></div>
+        <div id="history-comparison" class="track-list"></div>
+        <details class="track-history-details">
+          <summary>All historical results</summary>
+          <div id="history-results" class="track-list"></div>
+        </details>
+      </section>
+
+      <section id="empty-history-section" class="card hidden">
+        <h2 class="section-title">Runner History</h2>
+        <p class="section-desc">No prior Superior 100 history is saved for this runner. Forecasts still use the full historical field.</p>
+      </section>
+
+    </div>
+
+    <div id="sighting-sheet" class="sheet-backdrop hidden" aria-hidden="true">
+      <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sighting-sheet-title">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <div class="sheet-head">
+          <h2 id="sighting-sheet-title" class="section-title">Add Sighting</h2>
+          <button id="close-sighting-sheet-btn" class="track-icon-btn" title="Close">×</button>
+        </div>
+
+        <div class="track-sighting-grid">
+          <div class="input-group">
+            <label class="input-label" for="sighting-station">Checkpoint</label>
+            <select id="sighting-station"></select>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Arrival Time</label>
+            <div class="time-dropdowns track-time-dropdowns">
+              <select id="sighting-hour"></select>
+              <select id="sighting-minute"></select>
+              <select id="sighting-ampm"></select>
+            </div>
+          </div>
+          <div class="input-group day-group">
+            <label class="input-label" for="sighting-day">Race Day</label>
+            <select id="sighting-day" class="day-select"></select>
+          </div>
+        </div>
+
+        <div id="track-error" class="error-banner hidden"></div>
+        <button id="save-sighting-btn" class="btn btn-primary track-save-btn">Save Sighting</button>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Works offline after the first successful load on this device.</p>
+    <p>Forecasts use historical runners with similar split times.</p>
+  </footer>
+
+  <script src="js/sw-register.js"></script>
+  <script src="js/track.js?v=20"></script>
+</body>
+</html>

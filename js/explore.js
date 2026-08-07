@@ -233,8 +233,8 @@ function renderFinishHistogram() {
       labels,
       datasets: [{
         data: counts,
-        backgroundColor: 'rgba(74,222,128,0.5)',
-        borderColor:     'rgba(74,222,128,0.85)',
+        backgroundColor: 'rgba(125,211,252,0.42)',
+        borderColor:     'rgba(125,211,252,0.82)',
         borderWidth: 1,
         borderRadius: 3,
       }]
@@ -312,13 +312,13 @@ function renderSpreadChart() {
       labels,
       datasets: [
         // Outer band: p10 → p90
-        { data: p10, fill: { target: 1 }, backgroundColor: 'rgba(74,222,128,0.12)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
+        { data: p10, fill: { target: 1 }, backgroundColor: 'rgba(125,211,252,0.12)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
         { data: p90, fill: false, borderWidth: 0, pointRadius: 0, tension: 0.3 },
         // Inner band: p25 → p75
-        { data: p25, fill: { target: 3 }, backgroundColor: 'rgba(74,222,128,0.32)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
+        { data: p25, fill: { target: 3 }, backgroundColor: 'rgba(242,193,78,0.24)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
         { data: p75, fill: false, borderWidth: 0, pointRadius: 0, tension: 0.3 },
         // Median line
-        { data: p50, fill: false, borderColor: '#22c55e', borderWidth: 2.5, pointRadius: 3, pointBackgroundColor: '#22c55e', tension: 0.3 },
+        { data: p50, fill: false, borderColor: '#f2c14e', borderWidth: 2.5, pointRadius: 3, pointBackgroundColor: '#f2c14e', tension: 0.3 },
       ]
     },
     options: {

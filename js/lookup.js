@@ -202,7 +202,7 @@ function renderSplitsTable() {
 //  Year comparison chart
 // ─────────────────────────────────────────────
 
-const YEAR_COLORS = ['#22c55e','#60a5fa','#f59e0b','#f472b6','#a78bfa','#34d399','#fb923c'];
+const YEAR_COLORS = ['#f2c14e','#7dd3fc','#a78bfa','#fb7185','#34d399','#f97316','#c4b5fd'];
 
 function renderYearChart() {
   const chartCard = document.getElementById('year-chart-card');
