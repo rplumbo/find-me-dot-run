@@ -1,0 +1,424 @@
+body.home-page {
+  --home-bg: #0a0d0c;
+  --home-surface: #141917;
+  --home-surface-2: #171d1a;
+  --home-border: #303a35;
+  --home-text: #f7f3ea;
+  --home-muted: #aab5af;
+  --home-faint: #6d7a73;
+  --home-accent: #f2c14e;
+  --home-sky: #7dd3fc;
+  --home-success: #4ade80;
+  margin: 0;
+  background: var(--home-bg);
+  color: var(--home-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.home-page * { box-sizing: border-box; }
+
+.home-hero {
+  position: relative;
+  min-height: min(720px, 72svh);
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(8, 10, 9, 0.92) 0%, rgba(8, 10, 9, 0.72) 38%, rgba(8, 10, 9, 0.22) 100%),
+    linear-gradient(0deg, var(--home-bg) 0%, rgba(10, 13, 12, 0) 28%),
+    url('../assets/superior-trail-hero-north.jpg') center center / cover no-repeat;
+}
+
+.home-hero-shade {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 68%, rgba(242, 193, 78, 0.16), transparent 32%);
+  pointer-events: none;
+}
+
+.home-hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1120px;
+  min-height: min(720px, 72svh);
+  margin: 0 auto;
+  padding: 1.15rem 1rem 2.6rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: rgba(247, 243, 234, 0.74);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.home-nav a {
+  color: rgba(247, 243, 234, 0.82);
+  text-decoration: none;
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.home-nav a:hover { color: var(--home-accent); }
+
+.home-hero-copy {
+  width: min(100%, 650px);
+  margin-top: auto;
+}
+
+.home-kicker {
+  color: var(--home-accent);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 0.75rem;
+}
+
+.home-hero h1 {
+  max-width: 680px;
+  margin: 0;
+  font-size: clamp(2.45rem, 8vw, 5.6rem);
+  font-weight: 850;
+  line-height: 0.95;
+  color: var(--home-text);
+}
+
+.home-hero-sub {
+  max-width: 560px;
+  margin: 1rem 0 0;
+  color: rgba(247, 243, 234, 0.82);
+  font-size: clamp(1rem, 2.6vw, 1.24rem);
+  line-height: 1.45;
+}
+
+.home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.35rem;
+}
+
+.home-primary-action,
+.home-secondary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  text-decoration: none;
+  min-height: 46px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-primary-action {
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 184px;
+  padding: 0.72rem 0.9rem;
+  background: var(--home-accent);
+  border: 1px solid var(--home-accent);
+  color: #171007;
+  line-height: 1.05;
+}
+
+.home-primary-action span {
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+.home-primary-action strong {
+  margin-top: 0.18rem;
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.home-secondary-action {
+  padding: 0.72rem 0.95rem;
+  border: 1px solid rgba(247, 243, 234, 0.28);
+  background: rgba(10, 13, 12, 0.36);
+  color: var(--home-text);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.home-primary-action:hover { background: #ffd875; border-color: #ffd875; }
+.home-secondary-action:hover { border-color: var(--home-sky); color: var(--home-sky); }
+
+.home-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.95rem;
+  margin: 1.35rem 0 0;
+}
+
+.home-facts div {
+  min-width: 6.2rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(247, 243, 234, 0.2);
+}
+
+.home-facts dt {
+  color: var(--home-text);
+  font-size: 0.95rem;
+  font-weight: 850;
+  line-height: 1.1;
+}
+
+.home-facts dd {
+  color: rgba(247, 243, 234, 0.58);
+  font-size: 0.72rem;
+  font-weight: 750;
+  margin: 0.2rem 0 0;
+}
+
+.home-main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1.1rem 1rem 3rem;
+}
+
+.home-mode-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  gap: 0.85rem;
+}
+
+.home-mode-panel {
+  min-height: 270px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.25rem;
+  color: var(--home-text);
+  text-decoration: none;
+  background: var(--home-surface);
+  border: 1px solid var(--home-border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.home-mode-panel:hover,
+.home-mode-panel:active {
+  border-color: #52615a;
+  background: var(--home-surface-2);
+}
+
+.home-mode-panel-primary {
+  background:
+    linear-gradient(135deg, rgba(242, 193, 78, 0.11), rgba(20, 25, 23, 0.94) 42%),
+    #171a16;
+  border-color: rgba(242, 193, 78, 0.42);
+}
+
+.home-mode-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.home-mode-label {
+  color: var(--home-accent);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.home-mode-arrow {
+  color: var(--home-faint);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.home-mode-panel h2 {
+  max-width: 620px;
+  margin: 0;
+  color: var(--home-text);
+  font-size: clamp(1.55rem, 4vw, 2.45rem);
+  line-height: 1.02;
+}
+
+.home-mode-panel p {
+  max-width: 560px;
+  margin: 0;
+  color: var(--home-muted);
+  font-size: 0.94rem;
+  line-height: 1.52;
+}
+
+.home-mini-timeline {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.home-mini-timeline div {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.56rem 0;
+  border-top: 1px solid rgba(247, 243, 234, 0.09);
+}
+
+.home-mini-timeline span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--home-success);
+  box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.11);
+}
+
+.home-mini-timeline strong {
+  color: var(--home-text);
+  font-size: 0.9rem;
+}
+
+.home-mini-timeline em {
+  color: var(--home-muted);
+  font-style: normal;
+  font-size: 0.8rem;
+  font-weight: 750;
+  text-align: right;
+}
+
+.home-data-bars {
+  height: 92px;
+  display: flex;
+  align-items: end;
+  gap: 0.6rem;
+  padding-top: 1rem;
+}
+
+.home-data-bars span {
+  flex: 1;
+  min-width: 24px;
+  height: var(--h);
+  background: linear-gradient(180deg, rgba(125, 211, 252, 0.72), rgba(125, 211, 252, 0.14));
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  border-radius: 4px 4px 0 0;
+}
+
+.home-tools {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+
+.home-tools a {
+  min-height: 104px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.8rem;
+  color: var(--home-text);
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid var(--home-border);
+  border-radius: 6px;
+  padding: 0.9rem;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.home-tools a:hover,
+.home-tools a:active {
+  background: var(--home-surface);
+  border-color: #52615a;
+}
+
+.home-tools span {
+  color: var(--home-text);
+  font-size: 0.92rem;
+  font-weight: 850;
+  line-height: 1.15;
+}
+
+.home-tools strong {
+  color: var(--home-faint);
+  font-size: 0.75rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.home-footer {
+  background: var(--home-bg);
+}
+
+@media (max-width: 760px) {
+  .home-hero {
+    min-height: min(650px, 70svh);
+    background-position: 42% center;
+  }
+
+  .home-hero-inner {
+    min-height: min(650px, 70svh);
+    padding-bottom: 2rem;
+  }
+
+  .home-nav {
+    align-items: flex-start;
+    font-size: 0.66rem;
+  }
+
+  .home-nav a { font-size: 0.76rem; }
+
+  .home-hero h1 {
+    font-size: clamp(2.35rem, 13vw, 4.1rem);
+  }
+
+  .home-hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .home-primary-action,
+  .home-secondary-action {
+    width: 100%;
+  }
+
+  .home-facts {
+    gap: 0.6rem;
+  }
+
+  .home-facts div {
+    min-width: 0;
+    flex: 1 1 30%;
+  }
+
+  .home-main {
+    padding-top: 0.75rem;
+  }
+
+  .home-mode-grid,
+  .home-tools {
+    grid-template-columns: 1fr;
+  }
+
+  .home-mode-panel {
+    min-height: 0;
+  }
+
+  .home-mini-timeline div {
+    grid-template-columns: 10px minmax(0, 1fr);
+  }
+
+  .home-mini-timeline em {
+    grid-column: 2;
+    text-align: left;
+  }
+}

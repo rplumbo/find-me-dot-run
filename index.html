@@ -4,85 +4,106 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Superior 100 Spectator Guide</title>
-  <link rel="stylesheet" href="css/style.css?v=14">
+  <link rel="stylesheet" href="css/style.css?v=21">
+  <link rel="stylesheet" href="css/home.css?v=1">
 </head>
-<body>
+<body class="home-page">
 
-  <header class="site-header">
-    <div class="header-inner">
-      <div class="header-eyebrow">Superior Hiking Trail</div>
-      <h1>Superior 100 <span class="header-accent">Spectator Guide</span></h1>
-      <p class="header-sub">Figure out where to be and when. Built from 10 years of Superior 100 race data.</p>
+  <header class="home-hero">
+    <div class="home-hero-shade" aria-hidden="true"></div>
+    <div class="home-hero-inner">
+      <div class="home-nav">
+        <span>Superior Hiking Trail</span>
+        <a href="about.html">How it works</a>
+      </div>
+
+      <div class="home-hero-copy">
+        <p class="home-kicker">Race weekend field tool</p>
+        <h1>Superior 100 Spectator Guide</h1>
+        <p class="home-hero-sub">Record sightings, predict aid-station arrivals, and explore a decade of race history from the North Shore.</p>
+
+        <div class="home-hero-actions">
+          <a class="home-primary-action" href="track.html">
+            <span>Track Runner</span>
+            <strong>Race-day mode</strong>
+          </a>
+          <a class="home-secondary-action" href="explore.html">Explore the data</a>
+        </div>
+
+        <dl class="home-facts" aria-label="Guide facts">
+          <div>
+            <dt>14</dt>
+            <dd>Aid stations</dd>
+          </div>
+          <div>
+            <dt>2014-2025</dt>
+            <dd>Historical races</dd>
+          </div>
+          <div>
+            <dt>Offline</dt>
+            <dd>After first load</dd>
+          </div>
+        </dl>
+      </div>
     </div>
   </header>
 
-  <main class="landing-main landing-main-v2">
+  <main class="home-main">
 
-    <section class="landing-mode">
-      <div class="mode-kicker">Race Weekend</div>
-      <a href="track.html" class="mode-card mode-card-primary">
-        <div class="mode-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 19V5"/>
-            <path d="M4 7h10l-1.5 3L14 13H4"/>
-            <circle cx="18" cy="18" r="3"/>
-            <path d="M18 15v3l2 1"/>
-          </svg>
+    <section class="home-mode-grid" aria-label="Primary app modes">
+      <a href="track.html" class="home-mode-panel home-mode-panel-primary">
+        <div class="home-mode-head">
+          <span class="home-mode-label">Race Weekend</span>
+          <span class="home-mode-arrow">Open</span>
         </div>
-        <div class="mode-content">
-          <h2>Track Runner</h2>
-          <p>Save sightings from your phone and get the next checkpoint window, including when to arrive.</p>
-          <div class="mode-tags">
-            <span>Mobile-first</span>
-            <span>Saved on device</span>
-            <span>Offline after first load</span>
-          </div>
+        <h2>Meet your runner without camping at an aid station.</h2>
+        <p>Tap aid stations as your runner comes through. The next estimates update around the real sightings saved on this device.</p>
+        <div class="home-mini-timeline" aria-hidden="true">
+          <div><span></span><strong>Finland</strong><em>Actual 10:15 PM</em></div>
+          <div><span></span><strong>Sonju</strong><em>Expected 12:26 AM</em></div>
+          <div><span></span><strong>County 6</strong><em>Window narrows</em></div>
         </div>
-        <span class="mode-arrow">→</span>
+      </a>
+
+      <a href="explore.html" class="home-mode-panel">
+        <div class="home-mode-head">
+          <span class="home-mode-label">At Home</span>
+          <span class="home-mode-arrow">Open</span>
+        </div>
+        <h2>Dig into the race when you have a full screen.</h2>
+        <p>Study split distributions, finish trends, runner history, and side-by-side race comparisons.</p>
+        <div class="home-data-bars" aria-hidden="true">
+          <span style="--h: 38%"></span>
+          <span style="--h: 66%"></span>
+          <span style="--h: 54%"></span>
+          <span style="--h: 82%"></span>
+          <span style="--h: 48%"></span>
+        </div>
       </a>
     </section>
 
-    <section class="landing-mode">
-      <div class="mode-kicker">At Home</div>
-      <a href="explore.html" class="mode-card">
-        <div class="mode-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 18h18"/>
-            <path d="M6 18V9"/>
-            <path d="M12 18V5"/>
-            <path d="M18 18v-7"/>
-          </svg>
-        </div>
-        <div class="mode-content">
-          <h2>Explore Race Data</h2>
-          <p>Study finish distributions, pace profiles, field spread, and historical race patterns.</p>
-        </div>
-        <span class="mode-arrow">→</span>
-      </a>
-    </section>
-
-    <section class="landing-tools" aria-label="More tools">
-      <a href="lookup.html" class="tool-link">
+    <section class="home-tools" aria-label="More tools">
+      <a href="lookup.html">
         <span>Runner History</span>
-        <small>Splits by year</small>
+        <strong>Look up splits by year</strong>
       </a>
-      <a href="compare.html" class="tool-link">
+      <a href="compare.html">
         <span>Compare Runners</span>
-        <small>Side-by-side races</small>
+        <strong>Put races side by side</strong>
       </a>
-      <a href="predict.html" class="tool-link">
+      <a href="predict.html">
         <span>Quick Predictor</span>
-        <small>No runner selection</small>
+        <strong>Estimate from one sighting</strong>
       </a>
-      <a href="about.html" class="tool-link">
+      <a href="about.html">
         <span>How It Works</span>
-        <small>Model notes</small>
+        <strong>Understand the model</strong>
       </a>
     </section>
 
   </main>
 
-  <footer class="site-footer">
+  <footer class="site-footer home-footer">
     <p>Using data from 2014–2025 Superior 100 races (no 2020)</p>
     <p>Race start: 8:00 AM Friday · All predictions are estimates based on historical patterns</p>
   </footer>
