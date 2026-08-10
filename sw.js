@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 's100-spectator-';
-const CACHE_NAME = 's100-spectator-v41';
+const CACHE_NAME = 's100-spectator-v42';
 
 const CORE_ASSETS = [
   './',
