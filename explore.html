@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Explore the Race · Superior 100 Spectator Guide</title>
-  <link rel="stylesheet" href="css/style.css?v=14">
+  <link rel="stylesheet" href="css/style.css?v=40">
 </head>
 <body>
 
@@ -28,6 +28,24 @@
 
       <!-- Stat cards -->
       <div class="stat-grid" id="stat-grid"></div>
+
+      <!-- Finish percentiles by recorded sex -->
+      <div class="card table-card finish-percentile-card" style="margin-top: 1rem;">
+        <h3 class="section-title">Men's and Women's Finish Percentiles</h3>
+        <p class="section-sub" id="finish-percentile-summary"></p>
+        <div class="table-scroll">
+          <table class="pred-table finish-percentile-table">
+            <thead>
+              <tr>
+                <th>Finish group</th>
+                <th>Men</th>
+                <th>Women</th>
+              </tr>
+            </thead>
+            <tbody id="finish-percentile-tbody"></tbody>
+          </table>
+        </div>
+      </div>
 
       <!-- Top 10 finishes -->
       <div class="card table-card" style="margin-top: 1rem;">
@@ -89,6 +107,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="js/sw-register.js"></script>
-  <script src="js/explore.js?v=8"></script>
+  <script src="js/explore.js?v=10"></script>
 </body>
 </html>

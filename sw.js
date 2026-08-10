@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 's100-spectator-';
-const CACHE_NAME = 's100-spectator-v39';
+const CACHE_NAME = 's100-spectator-v41';
 
 const CORE_ASSETS = [
   './',
@@ -29,6 +29,7 @@ const CORE_ASSETS = [
   './data/superior100-aid-stations.json',
   './model.json',
   './named_runners.json',
+  './finish_percentiles.json',
 ];
 
 self.addEventListener('install', event => {

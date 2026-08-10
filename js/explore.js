@@ -4,6 +4,7 @@
 
 let model        = null;
 let namedRunners = null;
+let finishPercentiles = null;
 
 // ─────────────────────────────────────────────
 //  Time utilities
@@ -188,6 +189,28 @@ function renderStats() {
 }
 
 // ─────────────────────────────────────────────
+//  Finish percentiles by recorded sex
+// ─────────────────────────────────────────────
+
+function renderFinishPercentiles() {
+  const { percentiles, groups } = finishPercentiles;
+  const menCount = groups.men.count.toLocaleString();
+  const womenCount = groups.women.count.toLocaleString();
+
+  document.getElementById('finish-percentile-summary').textContent =
+    `Finishes within the 38-hour cutoff, based on ${menCount} men and ${womenCount} women. ` +
+    'Each time is the slowest finish included in that top percentage.';
+
+  document.getElementById('finish-percentile-tbody').innerHTML = percentiles.map(percentile => `
+    <tr>
+      <td>Top ${percentile}%</td>
+      <td>${minToElapsed(groups.men.cutoffs[percentile])}</td>
+      <td>${minToElapsed(groups.women.cutoffs[percentile])}</td>
+    </tr>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────
 //  Top 10 finishes table
 // ─────────────────────────────────────────────
 
@@ -365,14 +388,17 @@ function renderSpreadChart() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    const [modelRes, runnersRes] = await Promise.all([
+    const [modelRes, runnersRes, percentilesRes] = await Promise.all([
       fetch('model.json'),
       fetch('named_runners.json'),
+      fetch('finish_percentiles.json'),
     ]);
     if (!modelRes.ok)   throw new Error(`model.json: HTTP ${modelRes.status}`);
     if (!runnersRes.ok) throw new Error(`named_runners.json: HTTP ${runnersRes.status}`);
+    if (!percentilesRes.ok) throw new Error(`finish_percentiles.json: HTTP ${percentilesRes.status}`);
     model        = await modelRes.json();
     namedRunners = await runnersRes.json();
+    finishPercentiles = await percentilesRes.json();
   } catch (err) {
     document.getElementById('explore-loading').innerHTML =
       '<p style="color:#f87171;padding:2rem">Failed to load race data.</p>';
@@ -383,6 +409,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('explore-ui').classList.remove('hidden');
 
   renderStats();
+  renderFinishPercentiles();
   renderTopTen();
   renderPaceChart();
   requestAnimationFrame(() => {

@@ -66,6 +66,8 @@ CSV_FILES = [
 
 SPLIT_START_COL = 12
 N_STATIONS      = len(AID_STATIONS)
+FINISH_PERCENTILES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+FINISH_CUTOFF_MINUTES = 38 * 60
 
 # ─────────────────────────────────────────────
 #  CSV Parsing
@@ -86,16 +88,26 @@ def parse_time_to_minutes(s: str) -> int | None:
     return round((h * 3600 + m * 60 + sec) / 60)
 
 
-def load_all_runners() -> tuple[list, list]:
+def parse_finish_time(s: str) -> int | None:
+    """Parse the official finish result, including 2019's 24-hour wrap."""
+    minutes = parse_time_to_minutes(s)
+    if minutes is not None and minutes < 12 * 60:
+        minutes += 24 * 60
+    return minutes
+
+
+def load_all_runners() -> tuple[list, list, dict]:
     """
     Parse all CSVs.
 
     Returns:
       runners       — list of raw split arrays (anonymous, for kernel regression)
       named_runners — list of {name, year, splits} dicts (for history lookup)
+      finish_times  — elapsed finish times grouped by recorded sex
     """
     runners       = []
     named_runners = []
+    finish_times  = {"men": [], "women": []}
     for year, path in CSV_FILES:
         p = Path(path)
         if not p.exists():
@@ -121,12 +133,40 @@ def load_all_runners() -> tuple[list, list]:
                     last_valid = splits[k]
             if any(s is not None for s in splits):
                 runners.append(splits)
+                sex = row[5].strip().upper() if len(row) > 5 else ""
+                official_finish = parse_finish_time(row[1]) if len(row) > 1 else None
+                if (
+                    official_finish is not None
+                    and official_finish <= FINISH_CUTOFF_MINUTES
+                    and sex in {"M", "F"}
+                ):
+                    finish_times["men" if sex == "M" else "women"].append(official_finish)
                 first = row[3].strip() if len(row) > 3 else ""
                 last  = row[4].strip() if len(row) > 4 else ""
                 name  = f"{first} {last}".strip()
                 if name:
                     named_runners.append({"name": name, "year": year, "splits": splits})
-    return runners, named_runners
+    return runners, named_runners, finish_times
+
+
+def nearest_rank(values: list[int], percentile: int) -> int:
+    """Return the nearest-rank cutoff for an ascending list of finish times."""
+    ordered = sorted(values)
+    rank = max(1, math.ceil(percentile / 100 * len(ordered)))
+    return ordered[rank - 1]
+
+
+def finish_percentile_summary(finish_times: dict) -> dict:
+    return {
+        group: {
+            "count": len(times),
+            "cutoffs": {
+                str(percentile): nearest_rank(times, percentile)
+                for percentile in FINISH_PERCENTILES
+            },
+        }
+        for group, times in finish_times.items()
+    }
 
 
 # ─────────────────────────────────────────────
@@ -163,7 +203,7 @@ def station_stats(runners: list, idx: int) -> dict | None:
 
 def main():
     print("Loading runner data…")
-    runners, named_runners = load_all_runners()
+    runners, named_runners, finish_times = load_all_runners()
     print(f"  {len(runners)} runners loaded.")
 
     print("Computing per-station statistics…")
@@ -194,6 +234,15 @@ def main():
         json.dump(named_runners, fh, separators=(",", ":"))
     size_kb = named_path.stat().st_size / 1024
     print(f"Wrote {named_path}  ({size_kb:.1f} KB)")
+
+    percentile_path = Path("finish_percentiles.json")
+    with open(percentile_path, "w", encoding="utf-8") as fh:
+        json.dump({
+            "percentiles": FINISH_PERCENTILES,
+            "groups": finish_percentile_summary(finish_times),
+        }, fh, separators=(",", ":"))
+    size_kb = percentile_path.stat().st_size / 1024
+    print(f"Wrote {percentile_path}  ({size_kb:.1f} KB)")
 
 
 if __name__ == "__main__":
