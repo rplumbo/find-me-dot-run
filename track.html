@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Track Runner · Superior 100 Spectator Guide</title>
-  <link rel="stylesheet" href="css/style.css?v=28">
+  <link rel="stylesheet" href="css/style.css?v=30">
 </head>
 <body>
 
@@ -58,20 +58,19 @@
               <span>Compare To</span>
               <select id="compare-year-select"></select>
             </label>
-            <label id="prediction-window-control" class="track-range-control hidden" for="prediction-window-select">
-              <span>Arrival Plan</span>
-              <select id="prediction-window-select">
-                <option value="max">Safest</option>
-                <option value="crew-safe">Recommended</option>
-                <option value="balanced">Less Waiting</option>
-                <option value="aggressive">Shortest Wait</option>
-              </select>
-            </label>
           </div>
         </div>
-        <p id="arrival-plan-summary" class="arrival-plan-summary hidden"></p>
         <p id="checkpoint-action-note" class="checkpoint-action-note hidden">Tap an entry to record actual sightings of your runner. Otherwise, estimates are shown.</p>
         <div id="checkpoint-plan-list" class="checkpoint-plan"></div>
+        <aside id="range-explainer" class="range-explainer hidden" aria-labelledby="range-explainer-title">
+          <h3 id="range-explainer-title">How to Interpret these Results</h3>
+          <dl>
+            <div><dt>Fastest</dt><dd>Shortest ever travel time in the cohort matching your input times.</dd></div>
+            <div><dt>Typical</dt><dd>Median travel time - half were faster and half slower.</dd></div>
+            <div><dt>Slower</dt><dd>90th percentile for this group.</dd></div>
+          </dl>
+          <p>Your selections define a group of runners for which the above statistics are presented. This app uses all public historical data to compute these results. Arrival times are statistical and should not be treated as absolutes.</p>
+        </aside>
       </section>
 
     </div>
@@ -111,6 +110,6 @@
   </main>
 
   <script src="js/sw-register.js"></script>
-  <script src="js/track.js?v=35"></script>
+  <script src="js/track.js?v=41"></script>
 </body>
 </html>

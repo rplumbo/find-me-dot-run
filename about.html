@@ -20,65 +20,64 @@
 
     <div class="about-section card">
       <h2 class="about-heading">The data</h2>
-      <p>This app is built on split times from <strong>2,500+ runners</strong> who raced the Superior 100 between 2014 and 2025 (every year except 2020). For each runner, we have the time they came through all 14 aid stations, from Split Rock at mile 8.4 all the way to the finish at mile 102.</p>
+      <p>This app uses <strong>2,507 public runner performances</strong> from Superior 100 races held from 2014 through 2025, excluding 2020. The records contain passage times at up to 14 aid stations, from Split Rock through the finish.</p>
+      <p>A person who raced in several years contributes one performance for each year. Missing splits are allowed, so not every performance contains every aid station.</p>
     </div>
 
     <div class="about-section card">
-      <h2 class="about-heading">Finding comparable runners</h2>
-      <p>When you tell us where and when you last saw your runner, we search through all 2,500+ historical runners to find people who were at that same checkpoint around that same time. These are runners who were moving at a similar pace, in a similar position in the race.</p>
-      <p>Runners who match closely get weighted more heavily. Someone who was at Finland at exactly 10 PM counts for more than someone who came through at 9 or 11.</p>
+      <h2 class="about-heading">Building the matching group</h2>
+      <p>Your aid station selections define a fresh historical cohort for every upcoming station. A performance must match the latest sighting within <strong>10 minutes</strong>. When enough records are available, it must also match the previous sighting within 10 minutes.</p>
+      <p>If matching both recent sightings leaves fewer than 20 candidates, the app matches the latest sighting only. Every historical performance that meets the matching and validity requirements contributes equally to the results. At least five matching performances are required to show results.</p>
     </div>
 
     <div class="about-section card">
-      <h2 class="about-heading">The prediction</h2>
-      <p>Once we've found your runner's comparable group, we look at when those same runners reached each upcoming checkpoint. If they mostly came through Sonju between midnight and 2 AM, that's your window.</p>
-      <p>The expected time is the middle arrival from that comparable group: half arrived before, half after. Use it as the best single estimate, not as a guarantee.</p>
+      <h2 class="about-heading">Turning history into clock times</h2>
+      <p>The app measures how long each cohort member took to travel from your runner's latest known aid station to the upcoming station. It adds those historical travel times to your runner's actual sighting time.</p>
+      <p>This means the app does not copy a historical runner's absolute time of day. A runner seen at Sawbill at 1 PM is compared using historical Sawbill-to-Oberg travel durations, all starting from 1 PM on the current race clock.</p>
+      <p>Station-pair-specific statistical bounds remove implausible segment durations before the results are calculated.</p>
     </div>
 
     <div class="about-section card">
-      <h2 class="about-heading">What the shaded bands mean</h2>
-      <p>The chart shows two shaded regions:</p>
+      <h2 class="about-heading">Reading the results</h2>
       <ul class="about-list">
-        <li><strong>Wider band</strong> — 80% of comparable runners finished within this window. The other 20% were either faster or slower.</li>
-        <li><strong>Tighter band</strong> — The middle 50%. This is a good window to plan around.</li>
+        <li><strong>Fastest</strong> is the shortest valid travel time in the cohort matching your input times.</li>
+        <li><strong>Typical</strong> is the median travel time. Half of the cohort was faster and half was slower.</li>
+        <li><strong>Slower</strong> is the 90th-percentile travel time. Nine in ten cohort members were this fast or faster.</li>
       </ul>
-      <p>The bands get wider further into the race because runners spread out over time. Some people stop longer at aid stations, some hit a rough patch, some have a great day.</p>
+      <p>Slower is not the slowest possible result. One in ten matching performances took longer. The app displays the number of historical performances used for each station.</p>
     </div>
 
     <div class="about-section card">
       <h2 class="about-heading">Multiple sightings</h2>
-      <p>Each sighting narrows the pool. A runner seen at Silver Bay at noon <em>and</em> Finland at 10 PM is a much more specific profile than either observation alone. We find historical runners who match both.</p>
-      <p>In practice, two sightings can cut the prediction window nearly in half, because you're filtering out runners who happened to match one checkpoint but ran a completely different overall pace.</p>
+      <p>Every new sighting rebuilds the cohort. The latest one or two sightings define the match, with the most recent race information taking priority.</p>
+      <p>The newest actual sighting also becomes the starting point for every remaining travel-time calculation. This prevents an older absolute clock time from producing an impossible upcoming segment.</p>
     </div>
 
     <div class="about-section card">
-      <h2 class="about-heading">Important caveats</h2>
-      <ul class="about-list">
-        <li>This is based on historical patterns, not your specific runner. Injuries, weather, and race-day decisions can't be modeled.</li>
-        <li>The bands show what comparable runners did — they're not a guarantee of where your runner will land.</li>
-        <li>Very fast or very slow runners may have a small comparison group, which makes predictions less reliable. The app shows how many runners it's drawing from.</li>
-        <li>Aid station names and course distances have shifted slightly over the years. Predictions are based on time, not distance.</li>
-      </ul>
+      <h2 class="about-heading">How the method was tested</h2>
+      <p>The model was tested with leave-one-year-out backtesting. For each test, one race year was hidden, the cohorts were built from every other year, and each hidden runner's next aid station was evaluated using only their sightings up to that point.</p>
+      <p>The test produced <strong>23,935 next-station results</strong> from 24,160 eligible transitions, for 99.1% coverage. The displayed Fastest time was still later than the runner's actual passage in 3.5% of those results.</p>
+      <p>This is why Fastest is a historical cohort statistic, not a guaranteed earliest arrival.</p>
     </div>
 
     <div class="about-section card">
-      <h2 class="about-heading">Tips for spectators</h2>
+      <h2 class="about-heading">Important limitations</h2>
       <ul class="about-list">
-        <li>Use the tighter band to plan when to arrive. It covers the most likely window.</li>
-        <li>Your most recent sighting is the most useful. If you only have one, make it the latest one.</li>
-        <li>If you saw your runner at two checkpoints, add both. It makes a real difference.</li>
-        <li>For checkpoints that are a drive away, use the early end of the window to decide when to leave. You don't want to miss them.</li>
+        <li>These statistics describe historical cohorts, not your specific runner. Weather, injury, aid station stops, and race-day decisions can change the result.</li>
+        <li>If missing your runner is unacceptable, do not treat Fastest as a guaranteed safe arrival time. Account for your own driving, parking, and walking margin.</li>
+        <li>Public timing records can contain missing or incorrect splits. The outlier filter reduces obvious errors but cannot identify every data problem.</li>
+        <li>Aid station names and course distances have changed slightly across years. The model uses recorded passage times and station order.</li>
       </ul>
     </div>
 
     <div class="about-cta">
-      <a href="predict.html" class="btn btn-primary">Start Predicting →</a>
+      <a href="track.html" class="btn btn-primary">Track a Runner →</a>
     </div>
 
   </main>
 
   <footer class="site-footer">
-    <p>Using data from 2014–2025 Superior 100 races (no 2020)</p>
+    <p>Using data from 2014-2025 Superior 100 races (no 2020)</p>
   </footer>
 
   <script src="js/sw-register.js"></script>

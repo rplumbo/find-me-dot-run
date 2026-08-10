@@ -3,27 +3,24 @@
 // ─────────────────────────────────────────────
 
 const STORAGE_KEY = 's100-track-state-v1';
-const BANDWIDTH = 30;
-const ARRIVE_BUFFER_MIN = 15;
+const COHORT_WINDOW_MIN = 10;
+const HARD_OBSERVATION_COUNT = 2;
+const MIN_COHORT_SIZE = 5;
+const MIN_TWO_OBSERVATION_COHORT_SIZE = 20;
+const FINISH_BANDWIDTH_MIN = 30;
 const STOCK_FINISH_HOURS = [26, 28, 30, 32, 34, 36, 38];
 const DEFAULT_STOCK_FINISH_HOUR = 30;
-const ARRIVAL_PLAN_SUMMARIES = {
-  max: { success: '99.6%', wait: '2 hr 38 min' },
-  'crew-safe': { success: '95.2%', wait: '1 hr 11 min' },
-  balanced: { success: '90.3%', wait: '1 hr' },
-  aggressive: { success: '86.5%', wait: '54 min' },
-};
 
 let model = null;
 let namedRunners = [];
 let runnersByName = new Map();
 let selectedRunner = null;
 let sightings = [];
-let predictionWindow = 'crew-safe';
 let compareTarget = null;
 let stockSplitsByHour = new Map();
 let RACE_START_HOUR = 8;
 let AID_STATIONS = [];
+const durationBoundsCache = new Map();
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, ch => ({
@@ -90,8 +87,8 @@ function saveState() {
   }));
 }
 
-function gaussianWeight(diff) {
-  return Math.exp(-0.5 * (diff / BANDWIDTH) ** 2);
+function finishGaussianWeight(diff) {
+  return Math.exp(-0.5 * (diff / FINISH_BANDWIDTH_MIN) ** 2);
 }
 
 function weightedPct(sortedSamples, totalW, p) {
@@ -116,29 +113,88 @@ function weightedMedian(pairs) {
   return sorted[sorted.length - 1][0];
 }
 
-function predict(observations, targetStationIdx) {
-  const relevantObs = observations.filter(o => o.stationIndex < targetStationIdx);
-  if (relevantObs.length === 0) return null;
+function percentile(sortedValues, p) {
+  const position = (sortedValues.length - 1) * p;
+  const lo = Math.floor(position);
+  const hi = Math.min(lo + 1, sortedValues.length - 1);
+  const fraction = position - lo;
+  return sortedValues[lo] * (1 - fraction) + sortedValues[hi] * fraction;
+}
 
-  const samples = [];
-  for (const runner of model.runners) {
-    let w = 1;
-    for (const obs of relevantObs) {
-      const t = runner[obs.stationIndex];
-      if (t === null) { w = 0; break; }
-      w *= gaussianWeight(t - obs.minutesFromStart);
-    }
-    if (w < 1e-9) continue;
+function durationBounds(startStationIdx, targetStationIdx) {
+  const key = `${startStationIdx}:${targetStationIdx}`;
+  if (durationBoundsCache.has(key)) return durationBoundsCache.get(key);
 
-    const tTarget = runner[targetStationIdx];
-    if (tTarget === null) continue;
-    samples.push({ t: tTarget, w });
+  const durations = model.runners
+    .map(runner => {
+      const start = runner[startStationIdx];
+      const target = runner[targetStationIdx];
+      return start === null || target === null || target < start ? null : target - start;
+    })
+    .filter(duration => duration !== null)
+    .sort((a, b) => a - b);
+
+  if (durations.length < 20) {
+    durationBoundsCache.set(key, null);
+    return null;
   }
 
-  if (samples.length < 5) return null;
-  samples.sort((a, b) => a.t - b.t);
+  const q1 = percentile(durations, 0.25);
+  const q3 = percentile(durations, 0.75);
+  const iqr = q3 - q1;
+  const bounds = {
+    min: Math.max(0, q1 - 1.5 * iqr),
+    max: q3 + 3 * iqr,
+  };
+  durationBoundsCache.set(key, bounds);
+  return bounds;
+}
+
+function predict(observations, targetStationIdx) {
+  const relevantObs = observations
+    .filter(o => o.stationIndex < targetStationIdx)
+    .sort((a, b) => a.stationIndex - b.stationIndex);
+  if (relevantObs.length === 0) return null;
+
+  const latestObs = relevantObs[relevantObs.length - 1];
+  const bounds = durationBounds(latestObs.stationIndex, targetStationIdx);
+  let candidates = [];
+
+  for (const hardCount of [Math.min(HARD_OBSERVATION_COUNT, relevantObs.length), 1]) {
+    const hardObservations = relevantObs.slice(-hardCount);
+    candidates = [];
+
+    model.runners.forEach(runner => {
+      const matchesHardObservations = hardObservations.every(obs => {
+        const split = runner[obs.stationIndex];
+        return split !== null && Math.abs(split - obs.minutesFromStart) <= COHORT_WINDOW_MIN;
+      });
+      if (!matchesHardObservations) return;
+
+      const latest = runner[latestObs.stationIndex];
+      const target = runner[targetStationIdx];
+      if (latest === null || target === null || target < latest) return;
+
+      const duration = target - latest;
+      if (bounds && (duration < bounds.min || duration > bounds.max)) return;
+
+      candidates.push({
+        t: latestObs.minutesFromStart + duration,
+      });
+    });
+
+    const requiredSize = hardCount > 1 ? MIN_TWO_OBSERVATION_COHORT_SIZE : MIN_COHORT_SIZE;
+    if (candidates.length >= requiredSize || hardCount === 1) {
+      break;
+    }
+  }
+
+  const samples = candidates
+    .map(candidate => ({ t: candidate.t, w: 1 }))
+    .sort((a, b) => a.t - b.t);
+
+  if (samples.length < MIN_COHORT_SIZE) return null;
   const totalW = samples.reduce((s, x) => s + x.w, 0);
-  const effN = totalW ** 2 / samples.reduce((s, x) => s + x.w ** 2, 0);
 
   return {
     p0: weightedPct(samples, totalW, 0),
@@ -153,7 +209,8 @@ function predict(observations, targetStationIdx) {
     p75: weightedPct(samples, totalW, 0.75),
     p90: weightedPct(samples, totalW, 0.90),
     p100: weightedPct(samples, totalW, 1),
-    effectiveN: Math.round(effN),
+    effectiveN: samples.length,
+    latestObserved: latestObs.minutesFromStart,
   };
 }
 
@@ -164,7 +221,7 @@ function typicalSplitsForFinish(targetMin) {
       const finish = runner[AID_STATIONS.length - 1];
       if (finish === null) continue;
 
-      const w = gaussianWeight(finish - targetMin);
+      const w = finishGaussianWeight(finish - targetMin);
       if (w < 1e-9) continue;
 
       const split = runner[stationIndex];
@@ -251,14 +308,6 @@ function setupControls() {
     .map(v => `<option value="${v}">${v}</option>`).join('');
   document.getElementById('sighting-day').innerHTML =
     '<option value="0">Fri</option><option value="1">Sat</option>';
-
-  const windowSelect = document.getElementById('prediction-window-select');
-  predictionWindow = 'crew-safe';
-  windowSelect.value = predictionWindow;
-  windowSelect.addEventListener('change', () => {
-    predictionWindow = windowSelect.value;
-    renderCheckpointPlan();
-  });
 
   document.getElementById('compare-year-select').addEventListener('change', event => {
     compareTarget = event.target.value;
@@ -549,31 +598,10 @@ function latestStationIndex() {
 }
 
 function predictionRange(pred) {
-  if (predictionWindow === 'max') {
-    return {
-      start: minToClockObj(pred.p0),
-      typical: minToClockObj(pred.p50),
-      most: minToClockObj(pred.p90),
-    };
-  }
-  if (predictionWindow === 'balanced') {
-    return {
-      start: minToClockObj(pred.p025),
-      typical: minToClockObj(pred.p50),
-      most: minToClockObj(pred.p90),
-    };
-  }
-  if (predictionWindow === 'aggressive') {
-    return {
-      start: minToClockObj(pred.p04),
-      typical: minToClockObj(pred.p50),
-      most: minToClockObj(pred.p90),
-    };
-  }
   return {
-    start: minToClockObj(pred.p01),
+    fastest: minToClockObj(pred.p0),
     typical: minToClockObj(pred.p50),
-    most: minToClockObj(pred.p90),
+    slower: minToClockObj(pred.p90),
   };
 }
 
@@ -605,15 +633,6 @@ function renderCheckpointPlan() {
   }
   note.textContent = noteText;
   note.classList.toggle('hidden', !noteText);
-  document.getElementById('prediction-window-control')
-    .classList.toggle('hidden', !selectedRunner || !sightings.length || lastIdx >= AID_STATIONS.length - 1);
-  const planSummary = document.getElementById('arrival-plan-summary');
-  const showArrivalPlan = Boolean(selectedRunner && sightings.length && lastIdx < AID_STATIONS.length - 1);
-  const planStats = ARRIVAL_PLAN_SUMMARIES[predictionWindow];
-  planSummary.textContent = planStats
-    ? `Across a full race, ${planStats.success} of backtests caught the runner at every stop. Typical wait: ${planStats.wait}.`
-    : '';
-  planSummary.classList.toggle('hidden', !showArrivalPlan);
   document.getElementById('checkpoint-action-note')
     .classList.toggle('hidden', !selectedRunner);
 
@@ -674,20 +693,23 @@ function renderCheckpointPlan() {
       <div class="checkpoint-time checkpoint-range">
         <div class="range-line range-muted">
           <span>Fastest</span>
-          <strong>${range.start.display} <span class="day-tag-inline">${range.start.day}</span></strong>
+          <strong>${range.fastest.display} <span class="day-tag-inline">${range.fastest.day}</span></strong>
         </div>
-        <div class="range-line range-expected">
+        <div class="range-line">
           <span>Typical</span>
           <strong>${range.typical.display} <span class="day-tag-inline">${range.typical.day}</span></strong>
         </div>
         <div class="range-line range-muted">
           <span>Slower</span>
-          <strong>${range.most.display} <span class="day-tag-inline">${range.most.day}</span></strong>
+          <strong>${range.slower.display} <span class="day-tag-inline">${range.slower.day}</span></strong>
         </div>
       </div>
-      <div class="range-sample" style="grid-column:1 / -1;justify-self:stretch;width:100%;box-sizing:border-box;font-size:0.54rem;line-height:1.2;text-align:center;white-space:normal">Based on ${pred.effectiveN} similar runners.</div>
+      <div class="range-sample" style="grid-column:1 / -1;justify-self:stretch;width:100%;box-sizing:border-box;font-size:0.54rem;line-height:1.2;text-align:center;white-space:normal">Based on ${pred.effectiveN} matching historical runners.</div>
     </div>`;
   }).join('');
+
+  document.getElementById('range-explainer')
+    .classList.toggle('hidden', !list.querySelector('.checkpoint-range'));
 
   list.querySelectorAll('[data-remove-station]').forEach(btn => {
     btn.addEventListener('click', event => {
