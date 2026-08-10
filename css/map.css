@@ -1,0 +1,254 @@
+:root {
+  --map-header-height: 72px;
+  --map-bg: #0b100e;
+  --map-surface: #151b18;
+  --map-border: #35413b;
+  --map-text: #f7f3ea;
+  --map-muted: #aab5af;
+  --map-accent: #f2c14e;
+  --map-route: #d94835;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body.course-map-page {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body.course-map-page {
+  background: var(--map-bg);
+  color: var(--map-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.hidden { display: none !important; }
+
+.course-map-header {
+  height: var(--map-header-height);
+  display: grid;
+  grid-template-columns: minmax(5rem, 1fr) auto minmax(5rem, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding: max(0.65rem, env(safe-area-inset-top)) max(0.8rem, env(safe-area-inset-right)) 0.65rem max(0.8rem, env(safe-area-inset-left));
+  background: var(--map-bg);
+  border-bottom: 1px solid var(--map-border);
+}
+
+.course-map-back {
+  justify-self: start;
+  color: var(--map-muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0;
+  text-decoration: none;
+}
+
+.course-map-back:hover { color: var(--map-accent); }
+
+.course-map-title {
+  min-width: 0;
+  text-align: center;
+}
+
+.course-map-title span {
+  display: block;
+  color: var(--map-accent);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.course-map-title h1 {
+  margin: 0.18rem 0 0;
+  color: var(--map-text);
+  font-size: 1.12rem;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.course-map-fit {
+  min-height: 34px;
+  justify-self: end;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--map-border);
+  border-radius: 6px;
+  background: var(--map-surface);
+  color: var(--map-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.course-map-fit:hover,
+.course-map-fit:focus-visible {
+  border-color: var(--map-accent);
+  outline: none;
+}
+
+.course-map-main {
+  position: relative;
+  width: 100%;
+  height: calc(100dvh - var(--map-header-height));
+  min-height: 320px;
+  overflow: hidden;
+}
+
+#course-map {
+  position: absolute;
+  inset: 0;
+}
+
+.course-map-status {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background: var(--map-bg);
+  color: var(--map-muted);
+  font-size: 0.86rem;
+  font-weight: 750;
+  text-align: center;
+}
+
+.course-map-error { color: #fca5a5; }
+
+.course-map-legend {
+  position: absolute;
+  z-index: 3;
+  left: max(0.7rem, env(safe-area-inset-left));
+  bottom: max(1.8rem, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.48rem 0.6rem;
+  border: 1px solid rgba(53, 65, 59, 0.9);
+  border-radius: 6px;
+  background: rgba(11, 16, 14, 0.9);
+  color: var(--map-text);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.course-map-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  white-space: nowrap;
+}
+
+.route-key {
+  width: 20px;
+  height: 4px;
+  border: 1px solid #fff;
+  border-radius: 2px;
+  background: var(--map-route);
+}
+
+.station-key {
+  width: 10px;
+  height: 10px;
+  border: 2px solid #17201c;
+  border-radius: 50% 50% 50% 0;
+  background: var(--map-accent);
+  transform: rotate(-45deg);
+}
+
+.course-station-marker {
+  position: absolute;
+  width: 20px;
+  height: 25px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.course-station-pin {
+  position: absolute;
+  left: 3px;
+  top: 2px;
+  width: 15px;
+  height: 15px;
+  border: 2px solid #17201c;
+  border-radius: 50% 50% 50% 0;
+  background: var(--map-accent);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.38);
+  transform: rotate(-45deg);
+  transition: transform 0.12s, background 0.12s;
+}
+
+.course-station-pin::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #17201c;
+}
+
+.course-station-marker:hover .course-station-pin,
+.course-station-marker:focus-visible .course-station-pin {
+  background: #ffd875;
+  transform: rotate(-45deg) scale(1.14);
+}
+
+.course-station-marker:focus-visible { outline: none; }
+
+.maplibregl-popup-content {
+  padding: 0.58rem 0.72rem;
+  border: 1px solid var(--map-border);
+  border-radius: 6px;
+  background: var(--map-bg);
+  color: var(--map-text);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.28);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.maplibregl-popup-tip { border-top-color: var(--map-bg) !important; }
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--map-bg) !important; }
+.maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: var(--map-bg) !important; }
+.maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: var(--map-bg) !important; }
+.maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: var(--map-bg) !important; }
+
+.maplibregl-ctrl-group {
+  border: 1px solid rgba(53, 65, 59, 0.9);
+  border-radius: 6px;
+  background: rgba(247, 243, 234, 0.96);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
+}
+
+.maplibregl-ctrl-attrib {
+  color: #33413a;
+  font-size: 10px;
+}
+
+@media (max-width: 520px) {
+  :root { --map-header-height: 64px; }
+
+  .course-map-header {
+    grid-template-columns: 4.5rem minmax(0, 1fr) 5.6rem;
+    gap: 0.4rem;
+    padding-left: max(0.62rem, env(safe-area-inset-left));
+    padding-right: max(0.62rem, env(safe-area-inset-right));
+  }
+
+  .course-map-title h1 { font-size: 1rem; }
+  .course-map-title span { font-size: 0.56rem; }
+  .course-map-fit { padding-inline: 0.48rem; font-size: 0.68rem; }
+  .course-map-legend { gap: 0.6rem; }
+}

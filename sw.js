@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 's100-spectator-';
-const CACHE_NAME = 's100-spectator-v38';
+const CACHE_NAME = 's100-spectator-v39';
 
 const CORE_ASSETS = [
   './',
@@ -10,15 +10,23 @@ const CORE_ASSETS = [
   './explore.html',
   './compare.html',
   './about.html',
+  './map.html',
   './css/style.css',
   './css/home.css',
+  './css/map.css',
   './assets/superior-trail-hero-north.jpg',
   './js/track.js',
   './js/app.js',
   './js/lookup.js',
   './js/explore.js',
   './js/compare.js',
+  './js/map.js',
   './js/sw-register.js',
+  './vendor/maplibre-gl.js',
+  './vendor/maplibre-gl.css',
+  './vendor/maplibre-gl.LICENSE.txt',
+  './data/superior100-route.geojson',
+  './data/superior100-aid-stations.json',
   './model.json',
   './named_runners.json',
 ];

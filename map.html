@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Course Map · Superior 100 Spectator Guide</title>
+  <link rel="stylesheet" href="vendor/maplibre-gl.css">
+  <link rel="stylesheet" href="css/map.css?v=2">
+</head>
+<body class="course-map-page">
+
+  <header class="course-map-header">
+    <a href="index.html" class="course-map-back">← Home</a>
+    <div class="course-map-title">
+      <span>Superior 100</span>
+      <h1>Course Map</h1>
+    </div>
+    <button id="fit-route-btn" class="course-map-fit" type="button">Full course</button>
+  </header>
+
+  <main class="course-map-main">
+    <div id="course-map" role="region" aria-label="Superior 100 course and aid stations"></div>
+    <div id="map-loading" class="course-map-status" role="status">Loading course map...</div>
+    <div id="map-error" class="course-map-status course-map-error hidden" role="alert"></div>
+    <div class="course-map-legend" aria-label="Map legend">
+      <span><i class="route-key" aria-hidden="true"></i>Route</span>
+      <span><i class="station-key" aria-hidden="true"></i>Aid stations</span>
+    </div>
+  </main>
+
+  <script src="vendor/maplibre-gl.js"></script>
+  <script src="js/map.js?v=2"></script>
+  <script src="js/sw-register.js"></script>
+</body>
+</html>

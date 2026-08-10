@@ -314,7 +314,7 @@ body.home-page {
 
 .home-tools {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 0.65rem;
   margin-top: 0.85rem;
 }

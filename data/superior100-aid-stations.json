@@ -1,0 +1,17 @@
+[
+  {"name":"Starting Line","coordinate":{"latitude":47.139884,"longitude":-91.469979}},
+  {"name":"Split Rock","coordinate":{"latitude":47.18715872060214,"longitude":-91.40334382653238}},
+  {"name":"Beaver Bay","coordinate":{"latitude":47.26609,"longitude":-91.30924}},
+  {"name":"Silver Bay","coordinate":{"latitude":47.29144947480973,"longitude":-91.29761785268785}},
+  {"name":"Tettegouche","coordinate":{"latitude":47.3482698897875,"longitude":-91.21631070971489}},
+  {"name":"County Road 6","coordinate":{"latitude":47.41170018943458,"longitude":-91.15455687046051}},
+  {"name":"Finland","coordinate":{"latitude":47.42807002344135,"longitude":-91.22944146394731}},
+  {"name":"Sonju Lake Road","coordinate":{"latitude":47.48286554033212,"longitude":-91.17846071720125}},
+  {"name":"Crosby Manitou","coordinate":{"latitude":47.47883492409003,"longitude":-91.1120854318142}},
+  {"name":"Sugarloaf","coordinate":{"latitude":47.49796649785825,"longitude":-90.99792391061784}},
+  {"name":"Cramer Road","coordinate":{"latitude":47.540297421711905,"longitude":-90.97489178180695}},
+  {"name":"Temperance","coordinate":{"latitude":47.56432058226733,"longitude":-90.8841472864151}},
+  {"name":"Sawbill","coordinate":{"latitude":47.59849754970975,"longitude":-90.8617213368416}},
+  {"name":"Oberg Mountain","coordinate":{"latitude":47.62817937917353,"longitude":-90.78487738966945}},
+  {"name":"Finish Line","coordinate":{"latitude":47.65943325965528,"longitude":-90.7134434580803}}
+]
