@@ -1985,6 +1985,11 @@ select {
   background: rgba(242, 193, 78, 0.075);
 }
 
+.checkpoint-row.is-estimate {
+  align-items: center;
+  row-gap: 0.28rem;
+}
+
 .checkpoint-row.is-actual {
   grid-template-columns: minmax(0, 1fr) auto 28px;
   align-items: center;
@@ -2019,6 +2024,14 @@ select {
   font-weight: 700;
   line-height: 1.4;
   margin: 0.2rem 0 0.6rem;
+}
+
+.arrival-plan-summary {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.4;
+  margin: 0.35rem 0 0.15rem;
 }
 
 .checkpoint-time {
@@ -2069,12 +2082,12 @@ select {
 
 .checkpoint-range {
   gap: 0.08rem;
-  min-width: 9.6rem;
+  min-width: 10.6rem;
 }
 
 .range-line {
   display: grid;
-  grid-template-columns: 4.25rem auto;
+  grid-template-columns: 5.7rem auto;
   align-items: baseline;
   gap: 0.45rem;
   width: 100%;
@@ -2084,6 +2097,7 @@ select {
   color: var(--text-faint);
   font-size: 0.68rem;
   font-weight: 750;
+  white-space: nowrap;
 }
 
 .range-line strong {
@@ -2096,6 +2110,20 @@ select {
 
 .range-expected strong { color: var(--accent); }
 .range-muted { opacity: 0.76; }
+
+.range-sample {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  color: var(--text-faint);
+  font-size: 0.54rem;
+  font-weight: 650;
+  line-height: 1.2;
+  margin-top: 0.02rem;
+  text-align: center;
+  white-space: normal;
+}
 
 .checkpoint-add-link {
   background: transparent;
@@ -2258,7 +2286,7 @@ select {
     align-items: start;
   }
   .checkpoint-row.is-estimate {
-    gap: 0.5rem;
+    column-gap: 0.5rem;
   }
   .checkpoint-row.is-actual {
     grid-template-columns: minmax(0, 1fr) auto 28px;
@@ -2273,7 +2301,7 @@ select {
     min-width: 0;
   }
   .range-line {
-    grid-template-columns: 4.25rem minmax(0, 1fr);
+    grid-template-columns: 5.7rem minmax(0, 1fr);
   }
   .range-line strong {
     text-align: right;

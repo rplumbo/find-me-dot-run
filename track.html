@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Track Runner · Superior 100 Spectator Guide</title>
-  <link rel="stylesheet" href="css/style.css?v=22">
+  <link rel="stylesheet" href="css/style.css?v=28">
 </head>
 <body>
 
@@ -59,15 +59,17 @@
               <select id="compare-year-select"></select>
             </label>
             <label id="prediction-window-control" class="track-range-control hidden" for="prediction-window-select">
-              <span>Range</span>
+              <span>Arrival Plan</span>
               <select id="prediction-window-select">
-                <option value="100">Max 100%</option>
-                <option value="80">Safer 80%</option>
-                <option value="50">Tighter 50%</option>
+                <option value="max">Safest</option>
+                <option value="crew-safe">Recommended</option>
+                <option value="balanced">Less Waiting</option>
+                <option value="aggressive">Shortest Wait</option>
               </select>
             </label>
           </div>
         </div>
+        <p id="arrival-plan-summary" class="arrival-plan-summary hidden"></p>
         <p id="checkpoint-action-note" class="checkpoint-action-note hidden">Tap an entry to record actual sightings of your runner. Otherwise, estimates are shown.</p>
         <div id="checkpoint-plan-list" class="checkpoint-plan"></div>
       </section>
@@ -108,12 +110,7 @@
 
   </main>
 
-  <footer class="site-footer">
-    <p>Works offline after the first successful load on this device.</p>
-    <p>Forecasts use historical runners with similar split times.</p>
-  </footer>
-
   <script src="js/sw-register.js"></script>
-  <script src="js/track.js?v=23"></script>
+  <script src="js/track.js?v=35"></script>
 </body>
 </html>

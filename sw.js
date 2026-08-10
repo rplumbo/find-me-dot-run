@@ -1,4 +1,5 @@
-const CACHE_NAME = 's100-spectator-v27';
+const CACHE_PREFIX = 's100-spectator-';
+const CACHE_NAME = 's100-spectator-v38';
 
 const CORE_ASSETS = [
   './',
@@ -32,11 +33,35 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
-      .then(() => self.clients.claim())
+    caches.keys().then(async keys => {
+      const oldAppCaches = keys.filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME);
+      await Promise.all(oldAppCaches.map(key => caches.delete(key)));
+      await self.clients.claim();
+
+      // Existing pages already loaded their assets through the old worker.
+      // Reload them once so the newly activated worker can serve current code.
+      if (oldAppCaches.length) {
+        const windows = await self.clients.matchAll({ type: 'window' });
+        await Promise.all(windows.map(client => client.navigate(client.url).catch(() => null)));
+      }
+    })
   );
 });
+
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      const copy = response.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+    }
+    return response;
+  } catch {
+    return await caches.match(request)
+      || await caches.match(request, { ignoreSearch: true })
+      || Response.error();
+  }
+}
 
 self.addEventListener('fetch', event => {
   const request = event.request;
@@ -44,6 +69,13 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  const requiresFreshCode = request.mode === 'navigate'
+    || ['document', 'script', 'style', 'worker'].includes(request.destination);
+  if (requiresFreshCode) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
 
   event.respondWith(
     caches.match(request, { ignoreSearch: true }).then(cached => {

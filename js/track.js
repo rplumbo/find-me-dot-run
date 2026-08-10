@@ -7,13 +7,19 @@ const BANDWIDTH = 30;
 const ARRIVE_BUFFER_MIN = 15;
 const STOCK_FINISH_HOURS = [26, 28, 30, 32, 34, 36, 38];
 const DEFAULT_STOCK_FINISH_HOUR = 30;
+const ARRIVAL_PLAN_SUMMARIES = {
+  max: { success: '99.6%', wait: '2 hr 38 min' },
+  'crew-safe': { success: '95.2%', wait: '1 hr 11 min' },
+  balanced: { success: '90.3%', wait: '1 hr' },
+  aggressive: { success: '86.5%', wait: '54 min' },
+};
 
 let model = null;
 let namedRunners = [];
 let runnersByName = new Map();
 let selectedRunner = null;
 let sightings = [];
-let predictionWindow = '80';
+let predictionWindow = 'crew-safe';
 let compareTarget = null;
 let stockSplitsByHour = new Map();
 let RACE_START_HOUR = 8;
@@ -136,6 +142,11 @@ function predict(observations, targetStationIdx) {
 
   return {
     p0: weightedPct(samples, totalW, 0),
+    p01: weightedPct(samples, totalW, 0.01),
+    p02: weightedPct(samples, totalW, 0.02),
+    p025: weightedPct(samples, totalW, 0.025),
+    p04: weightedPct(samples, totalW, 0.04),
+    p05: weightedPct(samples, totalW, 0.05),
     p10: weightedPct(samples, totalW, 0.10),
     p25: weightedPct(samples, totalW, 0.25),
     p50: weightedPct(samples, totalW, 0.50),
@@ -242,7 +253,7 @@ function setupControls() {
     '<option value="0">Fri</option><option value="1">Sat</option>';
 
   const windowSelect = document.getElementById('prediction-window-select');
-  predictionWindow = '80';
+  predictionWindow = 'crew-safe';
   windowSelect.value = predictionWindow;
   windowSelect.addEventListener('change', () => {
     predictionWindow = windowSelect.value;
@@ -538,24 +549,31 @@ function latestStationIndex() {
 }
 
 function predictionRange(pred) {
-  if (predictionWindow === '100') {
+  if (predictionWindow === 'max') {
     return {
-      early: minToClockObj(pred.p0),
-      expected: minToClockObj(pred.p50),
-      late: minToClockObj(pred.p100),
+      start: minToClockObj(pred.p0),
+      typical: minToClockObj(pred.p50),
+      most: minToClockObj(pred.p90),
     };
   }
-  if (predictionWindow === '50') {
+  if (predictionWindow === 'balanced') {
     return {
-      early: minToClockObj(pred.p25),
-      expected: minToClockObj(pred.p50),
-      late: minToClockObj(pred.p75),
+      start: minToClockObj(pred.p025),
+      typical: minToClockObj(pred.p50),
+      most: minToClockObj(pred.p90),
+    };
+  }
+  if (predictionWindow === 'aggressive') {
+    return {
+      start: minToClockObj(pred.p04),
+      typical: minToClockObj(pred.p50),
+      most: minToClockObj(pred.p90),
     };
   }
   return {
-    early: minToClockObj(pred.p10),
-    expected: minToClockObj(pred.p50),
-    late: minToClockObj(pred.p90),
+    start: minToClockObj(pred.p01),
+    typical: minToClockObj(pred.p50),
+    most: minToClockObj(pred.p90),
   };
 }
 
@@ -589,6 +607,13 @@ function renderCheckpointPlan() {
   note.classList.toggle('hidden', !noteText);
   document.getElementById('prediction-window-control')
     .classList.toggle('hidden', !selectedRunner || !sightings.length || lastIdx >= AID_STATIONS.length - 1);
+  const planSummary = document.getElementById('arrival-plan-summary');
+  const showArrivalPlan = Boolean(selectedRunner && sightings.length && lastIdx < AID_STATIONS.length - 1);
+  const planStats = ARRIVAL_PLAN_SUMMARIES[predictionWindow];
+  planSummary.textContent = planStats
+    ? `Across a full race, ${planStats.success} of backtests caught the runner at every stop. Typical wait: ${planStats.wait}.`
+    : '';
+  planSummary.classList.toggle('hidden', !showArrivalPlan);
   document.getElementById('checkpoint-action-note')
     .classList.toggle('hidden', !selectedRunner);
 
@@ -648,18 +673,19 @@ function renderCheckpointPlan() {
       </div>
       <div class="checkpoint-time checkpoint-range">
         <div class="range-line range-muted">
-          <span>Earliest</span>
-          <strong>${range.early.display} <span class="day-tag-inline">${range.early.day}</span></strong>
+          <span>Fastest</span>
+          <strong>${range.start.display} <span class="day-tag-inline">${range.start.day}</span></strong>
         </div>
         <div class="range-line range-expected">
-          <span>Expected</span>
-          <strong>${range.expected.display} <span class="day-tag-inline">${range.expected.day}</span></strong>
+          <span>Typical</span>
+          <strong>${range.typical.display} <span class="day-tag-inline">${range.typical.day}</span></strong>
         </div>
         <div class="range-line range-muted">
-          <span>Latest</span>
-          <strong>${range.late.display} <span class="day-tag-inline">${range.late.day}</span></strong>
+          <span>Slower</span>
+          <strong>${range.most.display} <span class="day-tag-inline">${range.most.day}</span></strong>
         </div>
       </div>
+      <div class="range-sample" style="grid-column:1 / -1;justify-self:stretch;width:100%;box-sizing:border-box;font-size:0.54rem;line-height:1.2;text-align:center;white-space:normal">Based on ${pred.effectiveN} similar runners.</div>
     </div>`;
   }).join('');
 
