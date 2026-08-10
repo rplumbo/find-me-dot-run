@@ -5,6 +5,8 @@
 const STORAGE_KEY = 's100-track-state-v1';
 const BANDWIDTH = 30;
 const ARRIVE_BUFFER_MIN = 15;
+const STOCK_FINISH_HOURS = [26, 28, 30, 32, 34, 36, 38];
+const DEFAULT_STOCK_FINISH_HOUR = 30;
 
 let model = null;
 let namedRunners = [];
@@ -12,7 +14,8 @@ let runnersByName = new Map();
 let selectedRunner = null;
 let sightings = [];
 let predictionWindow = '80';
-let compareYear = null;
+let compareTarget = null;
+let stockSplitsByHour = new Map();
 let RACE_START_HOUR = 8;
 let AID_STATIONS = [];
 
@@ -61,11 +64,13 @@ function loadState() {
     if (state.version !== 1) return;
     selectedRunner = state.selectedRunner || null;
     sightings = Array.isArray(state.sightings) ? state.sightings : [];
-    compareYear = Number.isInteger(state.compareYear) ? state.compareYear : null;
+    compareTarget = typeof state.compareTarget === 'string'
+      ? state.compareTarget
+      : Number.isInteger(state.compareYear) ? `runner:${state.compareYear}` : null;
   } catch {
     selectedRunner = null;
     sightings = [];
-    compareYear = null;
+    compareTarget = null;
   }
 }
 
@@ -74,7 +79,7 @@ function saveState() {
     version: 1,
     selectedRunner,
     sightings,
-    compareYear,
+    compareTarget,
     savedAt: new Date().toISOString(),
   }));
 }
@@ -90,6 +95,19 @@ function weightedPct(sortedSamples, totalW, p) {
     if (cum / totalW >= p) return t;
   }
   return sortedSamples[sortedSamples.length - 1].t;
+}
+
+function weightedMedian(pairs) {
+  const sorted = pairs.slice().sort((a, b) => a[0] - b[0]);
+  const totalW = sorted.reduce((s, p) => s + p[1], 0);
+  if (totalW <= 0) return null;
+
+  let cum = 0;
+  for (const [v, w] of sorted) {
+    cum += w;
+    if (cum / totalW >= 0.5) return v;
+  }
+  return sorted[sorted.length - 1][0];
 }
 
 function predict(observations, targetStationIdx) {
@@ -126,6 +144,31 @@ function predict(observations, targetStationIdx) {
     p100: weightedPct(samples, totalW, 1),
     effectiveN: Math.round(effN),
   };
+}
+
+function typicalSplitsForFinish(targetMin) {
+  return AID_STATIONS.map((_, stationIndex) => {
+    const pairs = [];
+    for (const runner of model.runners) {
+      const finish = runner[AID_STATIONS.length - 1];
+      if (finish === null) continue;
+
+      const w = gaussianWeight(finish - targetMin);
+      if (w < 1e-9) continue;
+
+      const split = runner[stationIndex];
+      if (split === null) continue;
+      pairs.push([split, w]);
+    }
+    return weightedMedian(pairs);
+  });
+}
+
+function stockSplits(hours) {
+  if (!stockSplitsByHour.has(hours)) {
+    stockSplitsByHour.set(hours, typicalSplitsForFinish(hours * 60));
+  }
+  return stockSplitsByHour.get(hours);
 }
 
 function minToClockObj(minutesFromStart) {
@@ -207,7 +250,7 @@ function setupControls() {
   });
 
   document.getElementById('compare-year-select').addEventListener('change', event => {
-    compareYear = parseInt(event.target.value, 10);
+    compareTarget = event.target.value;
     saveState();
     renderCheckpointPlan();
   });
@@ -230,22 +273,61 @@ function runnerHistory() {
   return runnersByName.get(selectedRunner.key) || null;
 }
 
-function syncCompareYear() {
+function compareOptions() {
   const history = runnerHistory();
-  if (!history || !history.entries.length) {
-    compareYear = null;
-    return;
+  const options = [];
+
+  if (history) {
+    for (const entry of history.entries.slice().reverse()) {
+      options.push({
+        value: `runner:${entry.year}`,
+        label: String(entry.year),
+        entry: {
+          label: String(entry.year),
+          splits: entry.splits,
+        },
+      });
+    }
   }
-  if (!history.entries.some(entry => entry.year === compareYear)) {
-    compareYear = history.entries[history.entries.length - 1].year;
+
+  for (const hours of STOCK_FINISH_HOURS) {
+    options.push({
+      value: `stock:${hours}`,
+      label: `${hours} hr`,
+      entry: {
+        label: `${hours} hr`,
+        splits: stockSplits(hours),
+      },
+    });
   }
+
+  return options;
+}
+
+function syncCompareTarget() {
+  if (!selectedRunner) {
+    compareTarget = null;
+    return [];
+  }
+
+  const options = compareOptions();
+  if (!options.length) {
+    compareTarget = null;
+    return options;
+  }
+
+  if (!options.some(option => option.value === compareTarget)) {
+    const history = runnerHistory();
+    compareTarget = history && history.entries.length
+      ? `runner:${history.entries[history.entries.length - 1].year}`
+      : `stock:${DEFAULT_STOCK_FINISH_HOUR}`;
+  }
+  return options;
 }
 
 function comparisonEntry() {
-  const history = runnerHistory();
-  if (!history) return null;
-  syncCompareYear();
-  return history.entries.find(entry => entry.year === compareYear) || null;
+  const options = syncCompareTarget();
+  return options.find(option => option.value === compareTarget)?.entry || null;
 }
 
 function actualComparison(sighting) {
@@ -257,11 +339,11 @@ function actualComparison(sighting) {
 
   const delta = sighting.minutesFromStart - comparisonTime;
   if (delta === 0) {
-    return { text: `Same as ${entry.year}`, tone: 'neutral' };
+    return { text: `Same as ${entry.label}`, tone: 'neutral' };
   }
 
   return {
-    text: `${minToDifference(delta)} ${delta < 0 ? 'faster' : 'slower'} vs ${entry.year}`,
+    text: `${minToDifference(delta)} ${delta < 0 ? 'faster' : 'slower'} vs ${entry.label}`,
     tone: delta < 0 ? 'faster' : 'slower',
   };
 }
@@ -272,7 +354,9 @@ function selectHistoricalRunner(runner) {
     name: runner.displayName,
     kind: 'historical',
   };
-  compareYear = runner.entries[runner.entries.length - 1]?.year || null;
+  compareTarget = runner.entries[runner.entries.length - 1]?.year
+    ? `runner:${runner.entries[runner.entries.length - 1].year}`
+    : `stock:${DEFAULT_STOCK_FINISH_HOUR}`;
   saveState();
   render();
 }
@@ -284,14 +368,14 @@ function selectFirstTimeRunner(name = '') {
     name: cleanName || 'First Time Runner',
     kind: 'first-time',
   };
-  compareYear = null;
+  compareTarget = `stock:${DEFAULT_STOCK_FINISH_HOUR}`;
   saveState();
   render();
 }
 
 function resetRunnerPicker() {
   selectedRunner = null;
-  compareYear = null;
+  compareTarget = null;
   saveState();
   render();
   document.getElementById('runner-search').focus();
@@ -480,21 +564,20 @@ function renderCheckpointPlan() {
   const note = document.getElementById('checkpoint-plan-note');
   const compareControl = document.getElementById('compare-year-control');
   const compareSelect = document.getElementById('compare-year-select');
-  const history = runnerHistory();
   const lastIdx = latestStationIndex();
   const actualByStation = new Map(sightings.map(s => [s.stationIndex, s]));
   const nextIdx = lastIdx >= 0 ? lastIdx + 1 : -1;
 
-  syncCompareYear();
-  if (history) {
-    compareSelect.innerHTML = history.entries.slice().reverse().map(entry =>
-      `<option value="${entry.year}">${entry.year}</option>`
+  const options = syncCompareTarget();
+  if (selectedRunner && options.length) {
+    compareSelect.innerHTML = options.map(option =>
+      `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`
     ).join('');
-    compareSelect.value = String(compareYear);
+    compareSelect.value = compareTarget;
   } else {
     compareSelect.innerHTML = '';
   }
-  compareControl.classList.toggle('hidden', !history);
+  compareControl.classList.toggle('hidden', !selectedRunner || !options.length);
 
   let noteText = '';
   if (!selectedRunner) {
