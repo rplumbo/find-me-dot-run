@@ -11,7 +11,7 @@ const COHORT_TARGET_SIZE = 40;         // …the cohort reaches this size
 const MIN_COHORT_SIZE = 5;
 
 const FINISH_WINDOW_MIN = 60;          // ± minutes for finish-anchored cohorts
-const STOCK_FINISH_HOURS = [26, 28, 30, 32, 34, 36, 38];
+const STOCK_FINISH_HOURS = [22, 24, 26, 28, 30, 32, 34, 36, 38];
 const DEFAULT_STOCK_FINISH_HOUR = 30;
 
 let model = null;
