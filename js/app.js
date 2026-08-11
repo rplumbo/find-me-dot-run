@@ -43,7 +43,7 @@ function gaussianWeight(diff) {
  *   weight(runner) = ∏  K( runner.splits[k] − observed_time[k] )
  *
  * This means a runner only earns high weight if they were near the observed
- * time at *every* checkpoint — the "cohort who shares this race history."
+ * time at *every* checkpoint: the "cohort who shares this race history."
  *
  * From that weighted sample of historical runners, compute the conditional
  * distribution at targetStationIdx.
@@ -157,7 +157,7 @@ function defaultDayForStation(idx) {
 }
 
 // ─────────────────────────────────────────────
-//  UI — Observation Rows
+//  UI: Observation Rows
 // ─────────────────────────────────────────────
 
 function stationOptions(selected = -1) {
@@ -297,7 +297,7 @@ function buildCohortDesc(observations, effectiveN) {
 }
 
 // ─────────────────────────────────────────────
-//  UI — Results
+//  UI: Results
 // ─────────────────────────────────────────────
 
 function showResults(observations) {
@@ -307,7 +307,7 @@ function showResults(observations) {
     .filter(s => s.index > lastIdx);
 
   if (!upcoming.length) {
-    showError("Runner has already reached the finish — nothing left to predict.");
+    showError("Runner has already reached the finish. Nothing left to predict.");
     return;
   }
 
@@ -489,7 +489,7 @@ async function init() {
   document.getElementById('loading-screen').classList.add('hidden');
   document.getElementById('input-section').classList.remove('hidden');
   document.getElementById('footer-note').textContent =
-    `Model: ${model.runners.length} runners · 2023–2025 Superior 100`;
+    `Model: ${model.runners.length} runners · 2014–2025 Superior 100`;
 
   addObservationRow();
 
@@ -509,7 +509,7 @@ async function init() {
       }
       const s = model.stationStats[o.stationIndex];
       if (s && (o.minutesFromStart < s.min - 120 || o.minutesFromStart > s.max + 120)) {
-        showError(`Time for "${AID_STATIONS[o.stationIndex].name}" is outside the historical range — double-check the race day.`);
+        showError(`Time for "${AID_STATIONS[o.stationIndex].name}" is outside the historical range. Double-check the race day.`);
         return;
       }
     }

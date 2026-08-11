@@ -2095,7 +2095,7 @@ select {
 
 .range-line {
   display: grid;
-  grid-template-columns: 5.7rem auto;
+  grid-template-columns: 6.2rem auto;
   align-items: baseline;
   gap: 0.45rem;
   width: 100%;
@@ -2117,6 +2117,15 @@ select {
 }
 
 .range-muted { opacity: 0.76; }
+
+.range-strong strong {
+  color: var(--accent);
+  font-size: 0.84rem;
+}
+
+.range-strong span:first-child {
+  color: var(--text-muted);
+}
 
 .range-sample {
   grid-column: 1 / -1;
@@ -2153,8 +2162,12 @@ select {
 
 .range-explainer dl div {
   display: grid;
-  grid-template-columns: 4.4rem minmax(0, 1fr);
+  grid-template-columns: 6.2rem minmax(0, 1fr);
   gap: 0.55rem;
+}
+
+.range-explainer dt {
+  white-space: nowrap;
 }
 
 .range-explainer dt,

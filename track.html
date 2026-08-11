@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Track Runner · Superior 100 Spectator Guide</title>
-  <link rel="stylesheet" href="css/style.css?v=30">
+  <link rel="stylesheet" href="css/style.css?v=32">
 </head>
 <body>
 
@@ -63,13 +63,14 @@
         <p id="checkpoint-action-note" class="checkpoint-action-note hidden">Tap an entry to record actual sightings of your runner. Otherwise, estimates are shown.</p>
         <div id="checkpoint-plan-list" class="checkpoint-plan"></div>
         <aside id="range-explainer" class="range-explainer hidden" aria-labelledby="range-explainer-title">
-          <h3 id="range-explainer-title">How to Interpret these Results</h3>
+          <h3 id="range-explainer-title">How to Read These Times</h3>
           <dl>
-            <div><dt>Fastest</dt><dd>Shortest ever travel time in the cohort matching your input times.</dd></div>
-            <div><dt>Typical</dt><dd>Median travel time - half were faster and half slower.</dd></div>
-            <div><dt>Slower</dt><dd>90th percentile for this group.</dd></div>
+            <div><dt>No one earlier</dt><dd>Your sighting time plus the fastest this section has ever been covered in 11 years of races (before your first sighting, the earliest anyone has ever reached that station). If you cannot miss your runner, be there by this time. In backtesting it was beaten in fewer than 1 in 1,000 cases, and only by new course records.</dd></div>
+            <div><dt>Earliest</dt><dd>The earliest arrival in the group. About 1 in 40 future runners arrive before their group's earliest.</dd></div>
+            <div><dt>Middle 50%</dt><dd>Half of the group arrived inside this window. The most likely time to see your runner.</dd></div>
+            <div><dt>Last 5% after</dt><dd>1 in 20 of the group arrived later than this. Runners can only drop out at an aid station, so if this time passes, ask the aid-station crew before assuming a problem.</dd></div>
           </dl>
-          <p>Your selections define a group of runners for which the above statistics are presented. This app uses all public historical data to compute these results. Arrival times are statistical and should not be treated as absolutes.</p>
+          <p>Every number is a plain statistic of real past runners; nothing is modeled or weighted. The group is rebuilt from your most recent sighting only. Older sightings are shown for reference but don't change the estimates (testing showed they don't help). All times come from official race timing, and data errors were removed at build time with a public log.</p>
         </aside>
       </section>
 
@@ -110,6 +111,6 @@
   </main>
 
   <script src="js/sw-register.js"></script>
-  <script src="js/track.js?v=41"></script>
+  <script src="js/track.js?v=46"></script>
 </body>
 </html>

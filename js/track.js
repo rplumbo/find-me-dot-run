@@ -3,11 +3,14 @@
 // ─────────────────────────────────────────────
 
 const STORAGE_KEY = 's100-track-state-v1';
-const COHORT_WINDOW_MIN = 10;
-const HARD_OBSERVATION_COUNT = 2;
+
+// Cohort definition; must match tools/backtest.py, which verifies the
+// claims the UI makes about these statistics.
+const COHORT_WINDOWS = [10, 15, 20];   // ± minutes around the sighting; widens until…
+const COHORT_TARGET_SIZE = 40;         // …the cohort reaches this size
 const MIN_COHORT_SIZE = 5;
-const MIN_TWO_OBSERVATION_COHORT_SIZE = 20;
-const FINISH_BANDWIDTH_MIN = 30;
+
+const FINISH_WINDOW_MIN = 60;          // ± minutes for finish-anchored cohorts
 const STOCK_FINISH_HOURS = [26, 28, 30, 32, 34, 36, 38];
 const DEFAULT_STOCK_FINISH_HOUR = 30;
 
@@ -20,7 +23,6 @@ let compareTarget = null;
 let stockSplitsByHour = new Map();
 let RACE_START_HOUR = 8;
 let AID_STATIONS = [];
-const durationBoundsCache = new Map();
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, ch => ({
@@ -87,148 +89,124 @@ function saveState() {
   }));
 }
 
-function finishGaussianWeight(diff) {
-  return Math.exp(-0.5 * (diff / FINISH_BANDWIDTH_MIN) ** 2);
-}
-
-function weightedPct(sortedSamples, totalW, p) {
+// Percentile rule: smallest sample value covering fraction p of the cohort.
+// Shared with tools/backtest.py so verified claims match displayed numbers.
+function cohortPct(sortedTimes, p) {
+  const n = sortedTimes.length;
   let cum = 0;
-  for (const { t, w } of sortedSamples) {
-    cum += w;
-    if (cum / totalW >= p) return t;
+  for (const t of sortedTimes) {
+    cum += 1;
+    if (cum / n >= p) return t;
   }
-  return sortedSamples[sortedSamples.length - 1].t;
+  return sortedTimes[n - 1];
 }
 
-function weightedMedian(pairs) {
-  const sorted = pairs.slice().sort((a, b) => a[0] - b[0]);
-  const totalW = sorted.reduce((s, p) => s + p[1], 0);
-  if (totalW <= 0) return null;
-
-  let cum = 0;
-  for (const [v, w] of sorted) {
-    cum += w;
-    if (cum / totalW >= 0.5) return v;
-  }
-  return sorted[sorted.length - 1][0];
-}
-
-function percentile(sortedValues, p) {
-  const position = (sortedValues.length - 1) * p;
-  const lo = Math.floor(position);
-  const hi = Math.min(lo + 1, sortedValues.length - 1);
-  const fraction = position - lo;
-  return sortedValues[lo] * (1 - fraction) + sortedValues[hi] * fraction;
-}
-
-function durationBounds(startStationIdx, targetStationIdx) {
-  const key = `${startStationIdx}:${targetStationIdx}`;
-  if (durationBoundsCache.has(key)) return durationBoundsCache.get(key);
-
-  const durations = model.runners
-    .map(runner => {
-      const start = runner[startStationIdx];
-      const target = runner[targetStationIdx];
-      return start === null || target === null || target < start ? null : target - start;
-    })
-    .filter(duration => duration !== null)
-    .sort((a, b) => a - b);
-
-  if (durations.length < 20) {
-    durationBoundsCache.set(key, null);
-    return null;
-  }
-
-  const q1 = percentile(durations, 0.25);
-  const q3 = percentile(durations, 0.75);
-  const iqr = q3 - q1;
-  const bounds = {
-    min: Math.max(0, q1 - 1.5 * iqr),
-    max: q3 + 3 * iqr,
-  };
-  durationBoundsCache.set(key, bounds);
-  return bounds;
-}
-
+/**
+ * Cohort statistics for arrival at targetStationIdx.
+ *
+ * The cohort is every historical runner who reached the MOST RECENT sighted
+ * station within ±window minutes of the sighting (the window widens
+ * 10 → 15 → 20 only while the cohort has fewer than COHORT_TARGET_SIZE).
+ * Earlier sightings are shown as actuals but do not constrain the cohort;
+ * backtesting showed they add no predictive value at any lookback distance.
+ *
+ * Arrival times are the cohort's real section durations added to the
+ * sighting time. Every returned number is a plain statistic of the cohort,
+ * plus the all-years fastest-ever section duration ("record floor").
+ */
 function predict(observations, targetStationIdx) {
-  const relevantObs = observations
-    .filter(o => o.stationIndex < targetStationIdx)
-    .sort((a, b) => a.stationIndex - b.stationIndex);
-  if (relevantObs.length === 0) return null;
+  const relevant = observations.filter(o => o.stationIndex < targetStationIdx);
+  if (relevant.length === 0) return null;
+  const latest = relevant.reduce((a, b) => (a.stationIndex > b.stationIndex ? a : b));
 
-  const latestObs = relevantObs[relevantObs.length - 1];
-  const bounds = durationBounds(latestObs.stationIndex, targetStationIdx);
-  let candidates = [];
-
-  for (const hardCount of [Math.min(HARD_OBSERVATION_COUNT, relevantObs.length), 1]) {
-    const hardObservations = relevantObs.slice(-hardCount);
-    candidates = [];
-
-    model.runners.forEach(runner => {
-      const matchesHardObservations = hardObservations.every(obs => {
-        const split = runner[obs.stationIndex];
-        return split !== null && Math.abs(split - obs.minutesFromStart) <= COHORT_WINDOW_MIN;
-      });
-      if (!matchesHardObservations) return;
-
-      const latest = runner[latestObs.stationIndex];
+  let durations = [];
+  let dnf = 0;
+  let window = COHORT_WINDOWS[0];
+  for (const w of COHORT_WINDOWS) {
+    durations = [];
+    dnf = 0;
+    window = w;
+    for (const runner of model.runners) {
+      const split = runner[latest.stationIndex];
+      if (split === null || Math.abs(split - latest.minutesFromStart) > w) continue;
       const target = runner[targetStationIdx];
-      if (latest === null || target === null || target < latest) return;
-
-      const duration = target - latest;
-      if (bounds && (duration < bounds.min || duration > bounds.max)) return;
-
-      candidates.push({
-        t: latestObs.minutesFromStart + duration,
-      });
-    });
-
-    const requiredSize = hardCount > 1 ? MIN_TWO_OBSERVATION_COHORT_SIZE : MIN_COHORT_SIZE;
-    if (candidates.length >= requiredSize || hardCount === 1) {
-      break;
+      if (target === null) {
+        // Not recorded at the target or any later station: the runner
+        // stopped somewhere before it (drops happen only at aid stations).
+        let seenLater = false;
+        for (let k = targetStationIdx; k < runner.length; k++) {
+          if (runner[k] !== null) { seenLater = true; break; }
+        }
+        if (!seenLater) dnf++;
+        continue;
+      }
+      if (target < split) continue;
+      durations.push(target - split);
     }
+    if (durations.length >= COHORT_TARGET_SIZE) break;
   }
 
-  const samples = candidates
-    .map(candidate => ({ t: candidate.t, w: 1 }))
-    .sort((a, b) => a.t - b.t);
+  if (durations.length < MIN_COHORT_SIZE) return null;
+  const ts = durations.map(d => latest.minutesFromStart + d).sort((a, b) => a - b);
 
-  if (samples.length < MIN_COHORT_SIZE) return null;
-  const totalW = samples.reduce((s, x) => s + x.w, 0);
-
+  const rec = model.sectionRecords?.[latest.stationIndex]?.[targetStationIdx] || null;
   return {
-    p0: weightedPct(samples, totalW, 0),
-    p01: weightedPct(samples, totalW, 0.01),
-    p02: weightedPct(samples, totalW, 0.02),
-    p025: weightedPct(samples, totalW, 0.025),
-    p04: weightedPct(samples, totalW, 0.04),
-    p05: weightedPct(samples, totalW, 0.05),
-    p10: weightedPct(samples, totalW, 0.10),
-    p25: weightedPct(samples, totalW, 0.25),
-    p50: weightedPct(samples, totalW, 0.50),
-    p75: weightedPct(samples, totalW, 0.75),
-    p90: weightedPct(samples, totalW, 0.90),
-    p100: weightedPct(samples, totalW, 1),
-    effectiveN: samples.length,
-    latestObserved: latestObs.minutesFromStart,
+    recordFloor: rec ? latest.minutesFromStart + rec[0] : ts[0],
+    recordYear: rec ? rec[1] : null,
+    p0: ts[0],
+    p05: cohortPct(ts, 0.05),
+    p25: cohortPct(ts, 0.25),
+    p50: cohortPct(ts, 0.50),
+    p75: cohortPct(ts, 0.75),
+    p95: cohortPct(ts, 0.95),
+    n: ts.length,
+    window,
+    dnf,
+    latestStationIndex: latest.stationIndex,
   };
+}
+
+/**
+ * Goal-finish cohort: every runner who finished within ±FINISH_WINDOW_MIN
+ * of the target. Returns band statistics of their actual splits at each
+ * station (used for the pre-race plan), or null where under MIN_COHORT_SIZE.
+ */
+function finishCohortBands(targetMin) {
+  const finishIdx = AID_STATIONS.length - 1;
+  const cohort = model.runners.filter(r => {
+    const f = r[finishIdx];
+    return f !== null && Math.abs(f - targetMin) <= FINISH_WINDOW_MIN;
+  });
+  return AID_STATIONS.map((_, stationIndex) => {
+    const ts = cohort
+      .map(r => r[stationIndex])
+      .filter(t => t !== null)
+      .sort((a, b) => a - b);
+    if (ts.length < MIN_COHORT_SIZE) return null;
+    return {
+      earliestEver: model.stationStats[stationIndex]?.min ?? ts[0],
+      p0: ts[0],
+      p25: cohortPct(ts, 0.25),
+      p50: cohortPct(ts, 0.50),
+      p75: cohortPct(ts, 0.75),
+      p95: cohortPct(ts, 0.95),
+      n: ts.length,
+    };
+  });
 }
 
 function typicalSplitsForFinish(targetMin) {
+  const finishIdx = AID_STATIONS.length - 1;
+  const cohort = model.runners.filter(r => {
+    const f = r[finishIdx];
+    return f !== null && Math.abs(f - targetMin) <= FINISH_WINDOW_MIN;
+  });
   return AID_STATIONS.map((_, stationIndex) => {
-    const pairs = [];
-    for (const runner of model.runners) {
-      const finish = runner[AID_STATIONS.length - 1];
-      if (finish === null) continue;
-
-      const w = finishGaussianWeight(finish - targetMin);
-      if (w < 1e-9) continue;
-
-      const split = runner[stationIndex];
-      if (split === null) continue;
-      pairs.push([split, w]);
-    }
-    return weightedMedian(pairs);
+    const ts = cohort
+      .map(r => r[stationIndex])
+      .filter(t => t !== null)
+      .sort((a, b) => a - b);
+    return ts.length ? cohortPct(ts, 0.50) : null;
   });
 }
 
@@ -315,6 +293,7 @@ function setupControls() {
     renderCheckpointPlan();
   });
 
+
   document.getElementById('sighting-station').addEventListener('change', () => {
     const idx = parseInt(document.getElementById('sighting-station').value, 10);
     setTimeSelectsFromMinutes(model.stationStats[idx]?.p50 || 0);
@@ -338,16 +317,29 @@ function compareOptions() {
   const options = [];
 
   if (history) {
-    for (const entry of history.entries.slice().reverse()) {
+    // Values are entry indexes, not years: two different people with the
+    // same name (or a re-run year) would otherwise collide.
+    const yearCounts = new Map();
+    for (const entry of history.entries) {
+      yearCounts.set(entry.year, (yearCounts.get(entry.year) || 0) + 1);
+    }
+    const yearSeen = new Map();
+    history.entries.forEach((entry, index) => {
+      const nth = (yearSeen.get(entry.year) || 0) + 1;
+      yearSeen.set(entry.year, nth);
+      const label = yearCounts.get(entry.year) > 1 ? `${entry.year} #${nth}` : String(entry.year);
       options.push({
-        value: `runner:${entry.year}`,
-        label: String(entry.year),
+        index,
+        value: `runner:${index}`,
+        label,
         entry: {
-          label: String(entry.year),
+          label,
+          kind: 'runner',
           splits: entry.splits,
         },
       });
-    }
+    });
+    options.reverse();
   }
 
   for (const hours of STOCK_FINISH_HOURS) {
@@ -356,6 +348,8 @@ function compareOptions() {
       label: `${hours} hr`,
       entry: {
         label: `${hours} hr`,
+        kind: 'stock',
+        hours,
         splits: stockSplits(hours),
       },
     });
@@ -365,21 +359,11 @@ function compareOptions() {
 }
 
 function syncCompareTarget() {
-  if (!selectedRunner) {
-    compareTarget = null;
-    return [];
-  }
-
   const options = compareOptions();
-  if (!options.length) {
-    compareTarget = null;
-    return options;
-  }
-
   if (!options.some(option => option.value === compareTarget)) {
     const history = runnerHistory();
     compareTarget = history && history.entries.length
-      ? `runner:${history.entries[history.entries.length - 1].year}`
+      ? `runner:${history.entries.length - 1}`
       : `stock:${DEFAULT_STOCK_FINISH_HOUR}`;
   }
   return options;
@@ -395,7 +379,9 @@ function actualComparison(sighting) {
   if (!entry) return null;
 
   const comparisonTime = entry.splits[sighting.stationIndex];
-  if (comparisonTime === null || comparisonTime === undefined) return null;
+  if (comparisonTime === null || comparisonTime === undefined) {
+    return { text: `No ${entry.label} time here`, tone: 'neutral' };
+  }
 
   const delta = sighting.minutesFromStart - comparisonTime;
   if (delta === 0) {
@@ -414,8 +400,8 @@ function selectHistoricalRunner(runner) {
     name: runner.displayName,
     kind: 'historical',
   };
-  compareTarget = runner.entries[runner.entries.length - 1]?.year
-    ? `runner:${runner.entries[runner.entries.length - 1].year}`
+  compareTarget = runner.entries.length
+    ? `runner:${runner.entries.length - 1}`
     : `stock:${DEFAULT_STOCK_FINISH_HOUR}`;
   saveState();
   render();
@@ -511,6 +497,26 @@ function showError(message) {
   setTimeout(() => el.classList.add('hidden'), 7000);
 }
 
+function impossibleSightingMessage(sighting) {
+  // Compare against neighboring sightings: a section faster than anything
+  // in 11 years, or absurdly slow, is almost always a wrong day or time.
+  for (const other of sightings) {
+    if (other.stationIndex === sighting.stationIndex) continue;
+    const [a, b] = other.stationIndex < sighting.stationIndex ? [other, sighting] : [sighting, other];
+    const miles = AID_STATIONS[b.stationIndex].distance - AID_STATIONS[a.stationIndex].distance;
+    const minutes = b.minutesFromStart - a.minutesFromStart;
+    const hrs = Math.round(minutes / 6) / 10;
+    const desc = `${AID_STATIONS[a.stationIndex].name} → ${AID_STATIONS[b.stationIndex].name}`;
+    if (minutes <= 0 || minutes / miles < 8) {
+      return `That would mean ${desc} (${miles.toFixed(1)} mi) in ${minutes} min, faster than anyone in 11 years. Is the time or day right?`;
+    }
+    if (minutes / miles > 180) {
+      return `That would mean ${hrs} hours for ${desc} (${miles.toFixed(1)} mi). Is the race day right?`;
+    }
+  }
+  return null;
+}
+
 function saveSighting() {
   const sighting = readSightingForm();
   if (sighting.minutesFromStart < 0) {
@@ -521,6 +527,11 @@ function saveSighting() {
   const stats = model.stationStats[sighting.stationIndex];
   if (stats && (sighting.minutesFromStart < stats.min - 120 || sighting.minutesFromStart > stats.max + 120)) {
     showError(`That ${AID_STATIONS[sighting.stationIndex].name} time is outside the normal historical range.`);
+    return;
+  }
+
+  const warning = impossibleSightingMessage(sighting);
+  if (warning && !window.confirm(warning)) {
     return;
   }
 
@@ -597,12 +608,90 @@ function latestStationIndex() {
   return sightings.length ? Math.max(...sightings.map(s => s.stationIndex)) : -1;
 }
 
-function predictionRange(pred) {
+function minToRangeStr(a, b) {
+  const oa = minToClockObj(a);
+  const ob = minToClockObj(b);
+  if (oa.day === ob.day) {
+    return `${oa.display}–${ob.display} <span class="day-tag-inline">${ob.day}</span>`;
+  }
+  return `${oa.display} <span class="day-tag-inline">${oa.day}</span>–${ob.display} <span class="day-tag-inline">${ob.day}</span>`;
+}
+
+function bandLinesHtml(floorLabel, floorMin, bands) {
+  return `
+      <div class="range-line range-strong">
+        <span>${floorLabel}</span>
+        <strong>${minToClockStr(floorMin)}</strong>
+      </div>
+      <div class="range-line">
+        <span>Earliest</span>
+        <strong>${minToClockStr(bands.p0)}</strong>
+      </div>
+      <div class="range-line">
+        <span>Middle 50%</span>
+        <strong>${minToRangeStr(bands.p25, bands.p75)}</strong>
+      </div>
+      <div class="range-line range-muted">
+        <span>Last 5% after</span>
+        <strong>${minToClockStr(bands.p95)}</strong>
+      </div>`;
+}
+
+function estimateRowHtml(station, stationIndex, pred, isNext, markAttrs) {
+  const sightedName = AID_STATIONS[pred.latestStationIndex].name;
+  return `<div class="checkpoint-row is-estimate${isNext ? ' is-next' : ''}"${markAttrs}>
+    <div>
+      <div class="checkpoint-name">${escapeHtml(station.name)}</div>
+      <div class="checkpoint-meta">Mile ${station.distance}</div>
+    </div>
+    <div class="checkpoint-time checkpoint-range">${bandLinesHtml('No one earlier', pred.recordFloor, pred)}</div>
+    <div class="range-sample">Using ${pred.n} runners who reached ${escapeHtml(sightedName)} within ${pred.window} min of your sighting.</div>
+  </div>`;
+}
+
+/**
+ * Anchor for the pre-race plan, derived from the Compare To selection:
+ * a stock pace anchors on that finish time; a past year anchors on that
+ * year's actual finish (falling back to the stock default if that year
+ * has no recorded finish).
+ */
+function preRaceAnchor() {
+  const entry = comparisonEntry();
+  if (!entry) return null;
+  const finish = entry.splits[AID_STATIONS.length - 1];
+  if (entry.kind === 'stock') {
+    return { targetMin: entry.hours * 60, entry, desc: `who finished within 1 h of ${entry.label}` };
+  }
+  if (finish !== null && finish !== undefined) {
+    return {
+      targetMin: finish,
+      entry,
+      desc: `who finished within 1 h of the ${entry.label} finish (${minToDifference(finish)})`,
+    };
+  }
   return {
-    fastest: minToClockObj(pred.p0),
-    typical: minToClockObj(pred.p50),
-    slower: minToClockObj(pred.p90),
+    targetMin: DEFAULT_STOCK_FINISH_HOUR * 60,
+    entry,
+    desc: `who finished within 1 h of ${DEFAULT_STOCK_FINISH_HOUR} hr (${entry.label} has no recorded finish)`,
   };
+}
+
+function preRaceRowHtml(station, stationIndex, bands, anchor, markAttrs) {
+  const refSplit = anchor.entry.splits[stationIndex];
+  const refLine = refSplit !== null && refSplit !== undefined
+    ? `<div class="range-line range-muted">
+        <span>${escapeHtml(anchor.entry.label)} ${anchor.entry.kind === 'runner' ? 'actual' : 'typical'}</span>
+        <strong>${minToClockStr(refSplit)}</strong>
+      </div>`
+    : '';
+  return `<div class="checkpoint-row is-estimate"${markAttrs}>
+    <div>
+      <div class="checkpoint-name">${escapeHtml(station.name)}</div>
+      <div class="checkpoint-meta">Mile ${station.distance}</div>
+    </div>
+    <div class="checkpoint-time checkpoint-range">${bandLinesHtml('No one earlier', bands.earliestEver, bands)}${refLine}</div>
+    <div class="range-sample">Using ${bands.n} runners ${anchor.desc}.</div>
+  </div>`;
 }
 
 function renderCheckpointPlan() {
@@ -615,20 +704,14 @@ function renderCheckpointPlan() {
   const nextIdx = lastIdx >= 0 ? lastIdx + 1 : -1;
 
   const options = syncCompareTarget();
-  if (selectedRunner && options.length) {
-    compareSelect.innerHTML = options.map(option =>
-      `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`
-    ).join('');
-    compareSelect.value = compareTarget;
-  } else {
-    compareSelect.innerHTML = '';
-  }
-  compareControl.classList.toggle('hidden', !selectedRunner || !options.length);
+  compareSelect.innerHTML = options.map(option =>
+    `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`
+  ).join('');
+  compareSelect.value = compareTarget;
+  compareControl.classList.toggle('hidden', !options.length);
 
   let noteText = '';
-  if (!selectedRunner) {
-    noteText = 'Choose a runner, then add the first sighting to start forecasting.';
-  } else if (lastIdx >= AID_STATIONS.length - 1) {
+  if (sightings.length && lastIdx >= AID_STATIONS.length - 1) {
     noteText = 'Finish sighting saved. All known race-day data is shown below.';
   }
   note.textContent = noteText;
@@ -642,6 +725,9 @@ function renderCheckpointPlan() {
         ...AID_STATIONS.map((_, i) => i).filter(i => i > lastIdx),
       ]
     : AID_STATIONS.map((_, i) => i);
+
+  const preRaceAnchorInfo = sightings.length ? null : preRaceAnchor();
+  const preRaceBands = preRaceAnchorInfo ? finishCohortBands(preRaceAnchorInfo.targetMin) : null;
 
   list.innerHTML = stationIndexes.map(stationIndex => {
     const station = AID_STATIONS[stationIndex];
@@ -663,6 +749,8 @@ function renderCheckpointPlan() {
     }
 
     if (!sightings.length) {
+      const bands = preRaceBands ? preRaceBands[stationIndex] : null;
+      if (bands) return preRaceRowHtml(station, stationIndex, bands, preRaceAnchorInfo, markAttrs);
       return `<div class="checkpoint-row is-empty"${markAttrs}>
       <div>
         <div class="checkpoint-name">${escapeHtml(station.name)}</div>
@@ -683,29 +771,7 @@ function renderCheckpointPlan() {
     </div>`;
     }
 
-    const isNext = stationIndex === nextIdx;
-    const range = predictionRange(pred);
-    return `<div class="checkpoint-row is-estimate${isNext ? ' is-next' : ''}"${markAttrs}>
-      <div>
-        <div class="checkpoint-name">${escapeHtml(station.name)}</div>
-        <div class="checkpoint-meta">Mile ${station.distance}</div>
-      </div>
-      <div class="checkpoint-time checkpoint-range">
-        <div class="range-line range-muted">
-          <span>Fastest</span>
-          <strong>${range.fastest.display} <span class="day-tag-inline">${range.fastest.day}</span></strong>
-        </div>
-        <div class="range-line">
-          <span>Typical</span>
-          <strong>${range.typical.display} <span class="day-tag-inline">${range.typical.day}</span></strong>
-        </div>
-        <div class="range-line range-muted">
-          <span>Slower</span>
-          <strong>${range.slower.display} <span class="day-tag-inline">${range.slower.day}</span></strong>
-        </div>
-      </div>
-      <div class="range-sample" style="grid-column:1 / -1;justify-self:stretch;width:100%;box-sizing:border-box;font-size:0.54rem;line-height:1.2;text-align:center;white-space:normal">Based on ${pred.effectiveN} matching historical runners.</div>
-    </div>`;
+    return estimateRowHtml(station, stationIndex, pred, stationIndex === nextIdx, markAttrs);
   }).join('');
 
   document.getElementById('range-explainer')

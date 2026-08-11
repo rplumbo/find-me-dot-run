@@ -1,21 +1,27 @@
 """
 build_model.py — Superior 100 Spectator Guide
 
-Reads historical split-time CSVs and writes model.json.
+Reads historical split-time CSVs, scrubs timing errors, and writes model.json.
 
 The model contains:
   - Station metadata and per-station statistics
   - Every runner's split times as compact integer arrays
+  - Fastest-ever section durations for every station pair ("section records")
 
-The JavaScript uses this data to run joint Gaussian kernel regression at
-query time: given one or more (station, time) observations, it finds the
-cohort of historical runners who match the *full* observed race history
-(weight = product of kernels across all observations), then reads off the
-conditional distribution at each target station from that cohort.
+The JavaScript builds cohorts at query time: given the most recent
+(station, time) sighting, the cohort is every historical runner who reached
+that station within a small window of the sighted time. The arrival
+distribution at a later station is that cohort's actual section durations
+added to the sighting time. No weighting, no filtering at query time —
+every displayed number is a plain statistic of real runners.
 
-This is the correct "peers who share their race history" model. Pre-computing
-pairwise conditionals and combining them independently would be wrong for
-multiple observations because it ignores the joint constraint.
+Data scrubbing happens HERE, at build time, where every exclusion is logged:
+  1. 24-hour wraparound repair, accepted only when the implied section
+     pace is plausible (source CSVs store H:MM:SS with H wrapping mod 24).
+  2. Section-pace scrub: a split implying a faster-than-humanly-possible
+     section is a timing error and is removed.
+  3. Split Rock (station 0) is masked for years before 2017 — the course
+     changed and old times there run ~25 minutes slower.
 
 Usage:
     python3 build_model.py
@@ -69,6 +75,19 @@ N_STATIONS      = len(AID_STATIONS)
 FINISH_PERCENTILES = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 FINISH_CUTOFF_MINUTES = 38 * 60
 
+# Scrub thresholds. The fastest section pace ever run here by a winner is
+# ~9 min/mile (early, downhill-heavy sections); anything under 8 is a
+# timing error. Sections longer than 14 hours exceed what aid-station
+# cutoffs allow and mark a bad wraparound repair. Cumulative pace beyond
+# 28 min/mile is slower than sweep cutoffs permit (legit all-time maxima
+# run ~25.7) and marks a slow-side typo.
+MIN_SECTION_PACE = 8.0          # minutes per mile
+MAX_SECTION_MINUTES = 14 * 60
+MAX_CUMULATIVE_PACE = 28.0      # minutes per mile from the start
+SPLIT_ROCK_FIRST_VALID_YEAR = 2017  # course changed; older station-0 times differ
+
+DISTANCES = [s["distance"] for s in AID_STATIONS]
+
 # ─────────────────────────────────────────────
 #  CSV Parsing
 # ─────────────────────────────────────────────
@@ -89,25 +108,105 @@ def parse_time_to_minutes(s: str) -> int | None:
 
 
 def parse_finish_time(s: str) -> int | None:
-    """Parse the official finish result, including 2019's 24-hour wrap."""
+    """Parse the official finish result, including the 24-hour wrap."""
     minutes = parse_time_to_minutes(s)
     if minutes is not None and minutes < 12 * 60:
         minutes += 24 * 60
     return minutes
 
 
-def load_all_runners() -> tuple[list, list, dict]:
+# ─────────────────────────────────────────────
+#  Scrubbing
+# ─────────────────────────────────────────────
+
+def section_pace(t_from: int, t_to: int, k_from: int, k_to: int) -> float:
+    return (t_to - t_from) / (DISTANCES[k_to] - DISTANCES[k_from])
+
+
+def scrub_splits(splits: list, log: list, ctx: str) -> list:
     """
-    Parse all CSVs.
+    Repair 24h wraparound and remove timing errors, appending one line per
+    change to `log`. Returns the scrubbed splits (mutates in place too).
+    """
+    # Pass 1: wraparound repair with plausibility check.
+    last = None
+    last_k = None
+    for k in range(N_STATIONS):
+        if splits[k] is None:
+            continue
+        if last is not None and splits[k] < last:
+            fixed = splits[k] + 1440
+            dur = fixed - last
+            if section_pace(last, fixed, last_k, k) >= MIN_SECTION_PACE and dur <= MAX_SECTION_MINUTES:
+                log.append(f"{ctx} {AID_STATIONS[k]['name']}: wrapped {splits[k]} -> {fixed}")
+                splits[k] = fixed
+            else:
+                log.append(f"{ctx} {AID_STATIONS[k]['name']}: nulled {splits[k]} (non-monotonic, +24h implausible)")
+                splits[k] = None
+                continue
+        last = splits[k]
+        last_k = k
+
+    # Pass 2: remove splits implying impossible section paces, measuring
+    # from the race start (index -1, time 0, mile 0) as well as between
+    # recorded splits. When a pair is bad, null the endpoint that also
+    # disagrees with its other neighbor; if ambiguous, trust the earlier
+    # split. The virtual start is never a victim.
+    def t(k: int) -> int:
+        return 0 if k == -1 else splits[k]
+
+    def miles(a: int, b: int) -> float:
+        return (DISTANCES[b] if b >= 0 else 0) - (DISTANCES[a] if a >= 0 else 0)
+
+    def bad_pair(a: int, b: int) -> bool:
+        return (t(b) - t(a)) / miles(a, b) < MIN_SECTION_PACE
+
+    changed = True
+    while changed:
+        changed = False
+        idx = [-1] + [k for k in range(N_STATIONS) if splits[k] is not None]
+        for pos in range(len(idx) - 1):
+            a, b = idx[pos], idx[pos + 1]
+            if not bad_pair(a, b):
+                continue
+            if a != -1 and pos > 0 and bad_pair(idx[pos - 1], a):
+                victim = a
+            elif pos + 2 < len(idx) and bad_pair(b, idx[pos + 2]):
+                victim = b
+            else:
+                victim = b
+            log.append(f"{ctx} {AID_STATIONS[victim]['name']}: nulled {splits[victim]} "
+                       f"(section faster than {MIN_SECTION_PACE} min/mi)")
+            splits[victim] = None
+            changed = True
+            break
+
+    # Pass 3: slow-side typos — cumulative pace beyond what sweep cutoffs
+    # allow cannot be genuine.
+    for k in range(N_STATIONS):
+        if splits[k] is not None and splits[k] > MAX_CUMULATIVE_PACE * DISTANCES[k]:
+            log.append(f"{ctx} {AID_STATIONS[k]['name']}: nulled {splits[k]} "
+                       f"(cumulative pace beyond {MAX_CUMULATIVE_PACE} min/mi)")
+            splits[k] = None
+    return splits
+
+
+def load_all_runners() -> tuple[list, list, list, dict, list]:
+    """
+    Parse and scrub all CSVs.
 
     Returns:
-      runners       — list of raw split arrays (anonymous, for kernel regression)
+      runners       — list of scrubbed split arrays (for cohort building)
+      runner_years  — race year for each entry in `runners` (parallel list)
       named_runners — list of {name, year, splits} dicts (for history lookup)
       finish_times  — elapsed finish times grouped by recorded sex
+      scrub_log     — one line per repaired/removed split
     """
     runners       = []
+    runner_years  = []
     named_runners = []
     finish_times  = {"men": [], "women": []}
+    scrub_log     = []
     for year, path in CSV_FILES:
         p = Path(path)
         if not p.exists():
@@ -115,24 +214,19 @@ def load_all_runners() -> tuple[list, list, dict]:
             continue
         with open(p, encoding="utf-8") as fh:
             rows = list(csv.reader(fh))
-        for row in rows[2:]:          # skip header and distance row
+        for row_num, row in enumerate(rows[2:], start=3):  # skip header and distance row
             if len(row) < SPLIT_START_COL + N_STATIONS * 2:
                 continue
             splits = [
                 parse_time_to_minutes(row[SPLIT_START_COL + k * 2])
                 for k in range(N_STATIONS)
             ]
-            # Fix 24-hour wraparound: source CSVs store times as H:MM:SS but
-            # H wraps mod 24, so runners passing 24h appear to have small times.
-            # Enforce monotonicity by adding 1440 wherever a split wrapped.
-            last_valid = None
-            for k in range(N_STATIONS):
-                if splits[k] is not None:
-                    if last_valid is not None and splits[k] < last_valid:
-                        splits[k] += 1440
-                    last_valid = splits[k]
+            scrub_splits(splits, scrub_log, f"{year} row {row_num}")
+            if year < SPLIT_ROCK_FIRST_VALID_YEAR and splits[0] is not None:
+                splits[0] = None  # course change; summarized in the report
             if any(s is not None for s in splits):
                 runners.append(splits)
+                runner_years.append(year)
                 sex = row[5].strip().upper() if len(row) > 5 else ""
                 official_finish = parse_finish_time(row[1]) if len(row) > 1 else None
                 if (
@@ -146,7 +240,7 @@ def load_all_runners() -> tuple[list, list, dict]:
                 name  = f"{first} {last}".strip()
                 if name:
                     named_runners.append({"name": name, "year": year, "splits": splits})
-    return runners, named_runners, finish_times
+    return runners, runner_years, named_runners, finish_times, scrub_log
 
 
 def nearest_rank(values: list[int], percentile: int) -> int:
@@ -170,7 +264,7 @@ def finish_percentile_summary(finish_times: dict) -> dict:
 
 
 # ─────────────────────────────────────────────
-#  Station Statistics
+#  Station Statistics & Section Records
 # ─────────────────────────────────────────────
 
 def station_stats(runners: list, idx: int) -> dict | None:
@@ -197,29 +291,71 @@ def station_stats(runners: list, idx: int) -> dict | None:
     }
 
 
+def section_records(runners: list, runner_years: list) -> list:
+    """
+    records[s][t] = [fastest-ever duration in minutes, year it was set]
+    for s < t, else None. The floor statistic: no runner in the dataset has
+    ever covered section s->t faster.
+    """
+    records = [[None] * N_STATIONS for _ in range(N_STATIONS)]
+    for s in range(N_STATIONS):
+        for t in range(s + 1, N_STATIONS):
+            best = None
+            best_year = None
+            for r, year in zip(runners, runner_years):
+                a, b = r[s], r[t]
+                if a is None or b is None or b < a:
+                    continue
+                d = b - a
+                if best is None or d < best:
+                    best, best_year = d, year
+            if best is not None:
+                records[s][t] = [best, best_year]
+    return records
+
+
 # ─────────────────────────────────────────────
 #  Main
 # ─────────────────────────────────────────────
 
 def main():
-    print("Loading runner data…")
-    runners, named_runners, finish_times = load_all_runners()
+    print("Loading and scrubbing runner data…")
+    runners, runner_years, named_runners, finish_times, scrub_log = load_all_runners()
     print(f"  {len(runners)} runners loaded.")
 
-    print("Computing per-station statistics…")
+    wrapped = sum(1 for l in scrub_log if "wrapped" in l)
+    nulled  = sum(1 for l in scrub_log if "nulled" in l)
+    masked  = sum(1 for r, y in zip(runners, runner_years)
+                  if y < SPLIT_ROCK_FIRST_VALID_YEAR)
+    print(f"\nScrub report: {wrapped} wraparound repairs, {nulled} splits removed, "
+          f"Split Rock masked for {masked} pre-{SPLIT_ROCK_FIRST_VALID_YEAR} runners.")
+    for line in scrub_log:
+        if "nulled" in line:
+            print(f"  {line}")
+    report_path = Path("scrub_report.txt")
+    report_path.write_text("\n".join(scrub_log) + "\n", encoding="utf-8")
+    print(f"Full log (including wrap repairs): {report_path}")
+
+    print("\nComputing per-station statistics…")
     stats = [station_stats(runners, k) for k in range(N_STATIONS)]
     for k, s in enumerate(stats):
         if s:
             print(f"  {AID_STATIONS[k]['name']:18s}  n={s['count']:3d}  "
-                  f"p10={s['p10']}min  p50={s['p50']}min  p90={s['p90']}min")
+                  f"min={s['min']}min  p50={s['p50']}min  max={s['max']}min")
+
+    print("Computing section records…")
+    records = section_records(runners, runner_years)
 
     model = {
         "raceStartHour": RACE_START_HOUR,
         "stations":      AID_STATIONS,
         "stationStats":  stats,
+        # records[s][t] = [fastest-ever s->t duration in minutes, year]
+        "sectionRecords": records,
+        "years":         sorted(set(runner_years)),
         # Each runner is a flat array of N_STATIONS integers (minutes from
         # race start), with null for any station the runner did not reach.
-        # The JavaScript kernel regression operates directly on this data.
+        # The JavaScript cohort logic operates directly on this data.
         "runners": runners,
     }
 

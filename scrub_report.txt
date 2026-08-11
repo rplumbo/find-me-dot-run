@@ -1,0 +1,169 @@
+2014 row 17 Tettegouche: nulled 411 (section faster than 8.0 min/mi)
+2014 row 142 Sawbill: wrapped 270 -> 1710
+2014 row 151 Cramer Road: wrapped 261 -> 1701
+2015 row 5 Cramer Road: nulled 1043 (section faster than 8.0 min/mi)
+2015 row 9 Cramer Road: nulled 1043 (section faster than 8.0 min/mi)
+2015 row 15 Cramer Road: nulled 1043 (section faster than 8.0 min/mi)
+2015 row 107 Silver Bay: nulled 348 (section faster than 8.0 min/mi)
+2016 row 12 Sawbill: nulled 1380 (section faster than 8.0 min/mi)
+2016 row 28 Finland: nulled 770 (section faster than 8.0 min/mi)
+2016 row 34 Finland: nulled 770 (section faster than 8.0 min/mi)
+2016 row 42 Finland: nulled 770 (section faster than 8.0 min/mi)
+2016 row 56 Finland: nulled 770 (section faster than 8.0 min/mi)
+2016 row 95 Sawbill: nulled 1865 (section faster than 8.0 min/mi)
+2016 row 154 Finland: nulled 770 (section faster than 8.0 min/mi)
+2016 row 188 County Road 6: nulled 555 (section faster than 8.0 min/mi)
+2017 row 30 Silver Bay: nulled 324 (section faster than 8.0 min/mi)
+2017 row 77 Crosby: nulled 1131 (non-monotonic, +24h implausible)
+2017 row 81 Finland: nulled 870 (section faster than 8.0 min/mi)
+2017 row 101 Crosby: nulled 1131 (non-monotonic, +24h implausible)
+2017 row 190 Temperance: wrapped 345 -> 1785
+2017 row 219 Cramer Road: wrapped 236 -> 1676
+2018 row 3 Split Rock: nulled 67 (section faster than 8.0 min/mi)
+2018 row 93 Finish: nulled 1980 (section faster than 8.0 min/mi)
+2018 row 178 Finland: nulled 1500 (cumulative pace beyond 28.0 min/mi)
+2018 row 219 Finland: nulled 1667 (cumulative pace beyond 28.0 min/mi)
+2019 row 5 Cramer Road: nulled 950 (section faster than 8.0 min/mi)
+2019 row 9 Finish: wrapped 38 -> 1478
+2019 row 10 Finish: wrapped 55 -> 1495
+2019 row 11 Finish: wrapped 55 -> 1495
+2019 row 15 Oberg: wrapped 21 -> 1461
+2019 row 16 Oberg: wrapped 21 -> 1461
+2019 row 23 Sawbill: wrapped 19 -> 1459
+2019 row 24 Sawbill: wrapped 45 -> 1485
+2019 row 25 Sawbill: wrapped 19 -> 1459
+2019 row 26 Sawbill: wrapped 19 -> 1459
+2019 row 28 Sawbill: wrapped 45 -> 1485
+2019 row 41 Temperance: wrapped 15 -> 1455
+2019 row 42 Temperance: wrapped 32 -> 1472
+2019 row 43 Temperance: wrapped 14 -> 1454
+2019 row 51 Temperance: wrapped 53 -> 1493
+2019 row 52 Temperance: wrapped 32 -> 1472
+2019 row 55 Temperance: wrapped 75 -> 1515
+2019 row 58 Temperance: wrapped 32 -> 1472
+2019 row 60 Temperance: wrapped 23 -> 1463
+2019 row 63 Temperance: wrapped 75 -> 1515
+2019 row 63 Sawbill: wrapped 170 -> 1610
+2019 row 65 Temperance: wrapped 75 -> 1515
+2019 row 86 Cramer Road: wrapped 37 -> 1477
+2019 row 89 Cramer Road: wrapped 24 -> 1464
+2019 row 96 Cramer Road: wrapped 76 -> 1516
+2019 row 98 Cramer Road: nulled 1446 (section faster than 8.0 min/mi)
+2019 row 110 Cramer Road: wrapped 37 -> 1477
+2019 row 112 Cramer Road: wrapped 65 -> 1505
+2019 row 114 Cramer Road: wrapped 65 -> 1505
+2019 row 123 Cramer Road: wrapped 24 -> 1464
+2019 row 139 Sugarloaf: wrapped 47 -> 1487
+2019 row 141 Sugarloaf: wrapped 21 -> 1461
+2019 row 143 Sugarloaf: wrapped 47 -> 1487
+2019 row 148 Sugarloaf: wrapped 47 -> 1487
+2019 row 149 Sugarloaf: wrapped 10 -> 1450
+2019 row 150 Sugarloaf: wrapped 47 -> 1487
+2019 row 153 Sugarloaf: wrapped 47 -> 1487
+2019 row 173 Sugarloaf: wrapped 57 -> 1497
+2019 row 180 Sugarloaf: wrapped 127 -> 1567
+2019 row 180 Cramer Road: wrapped 271 -> 1711
+2019 row 184 Sugarloaf: wrapped 148 -> 1588
+2019 row 203 Sugarloaf: wrapped 127 -> 1567
+2019 row 204 Sugarloaf: wrapped 148 -> 1588
+2019 row 206 Sugarloaf: wrapped 159 -> 1599
+2019 row 214 Crosby: wrapped 10 -> 1450
+2022 row 4 Beaver Bay: nulled 164 (section faster than 8.0 min/mi)
+2022 row 17 Beaver Bay: nulled 164 (section faster than 8.0 min/mi)
+2022 row 37 Temperance: wrapped 29 -> 1469
+2022 row 39 Temperance: wrapped 56 -> 1496
+2022 row 47 Temperance: wrapped 70 -> 1510
+2022 row 51 Temperance: wrapped 67 -> 1507
+2022 row 52 Cramer Road: wrapped 7 -> 1447
+2022 row 58 Cramer Road: wrapped 33 -> 1473
+2022 row 59 Cramer Road: wrapped 54 -> 1494
+2022 row 63 Cramer Road: wrapped 44 -> 1484
+2022 row 66 Sugarloaf: wrapped 29 -> 1469
+2022 row 71 Sugarloaf: wrapped 9 -> 1449
+2022 row 72 Sugarloaf: wrapped 9 -> 1449
+2022 row 75 Cramer Road: wrapped 33 -> 1473
+2022 row 79 Sugarloaf: wrapped 36 -> 1476
+2022 row 80 Cramer Road: wrapped 22 -> 1462
+2022 row 84 Sugarloaf: wrapped 9 -> 1449
+2022 row 85 Sugarloaf: wrapped 15 -> 1455
+2022 row 90 Sugarloaf: wrapped 42 -> 1482
+2022 row 96 Sugarloaf: wrapped 42 -> 1482
+2022 row 99 Sugarloaf: wrapped 59 -> 1499
+2022 row 101 Sugarloaf: wrapped 59 -> 1499
+2022 row 104 Sugarloaf: wrapped 9 -> 1449
+2022 row 107 Sugarloaf: wrapped 15 -> 1455
+2022 row 110 Sugarloaf: wrapped 71 -> 1511
+2022 row 112 Sugarloaf: wrapped 42 -> 1482
+2022 row 115 Sugarloaf: wrapped 29 -> 1469
+2022 row 122 Sugarloaf: wrapped 29 -> 1469
+2022 row 127 Sugarloaf: wrapped 164 -> 1604
+2022 row 128 Sugarloaf: wrapped 29 -> 1469
+2022 row 128 Cramer Road: wrapped 162 -> 1602
+2022 row 131 Sugarloaf: wrapped 100 -> 1540
+2022 row 132 Sugarloaf: wrapped 133 -> 1573
+2022 row 133 Sugarloaf: wrapped 100 -> 1540
+2022 row 135 Sugarloaf: wrapped 120 -> 1560
+2022 row 136 Sugarloaf: wrapped 80 -> 1520
+2022 row 137 Sugarloaf: wrapped 120 -> 1560
+2023 row 40 Silver Bay: nulled 293 (section faster than 8.0 min/mi)
+2023 row 46 Finland: nulled 726 (section faster than 8.0 min/mi)
+2023 row 91 Crosby: nulled 1152 (section faster than 8.0 min/mi)
+2023 row 108 Crosby: nulled 1163 (section faster than 8.0 min/mi)
+2023 row 128 Crosby: nulled 1152 (section faster than 8.0 min/mi)
+2023 row 184 Cramer Road: nulled 1087 (section faster than 8.0 min/mi)
+2023 row 228 Tettegouche: nulled 2145 (cumulative pace beyond 28.0 min/mi)
+2023 row 229 Tettegouche: nulled 2145 (cumulative pace beyond 28.0 min/mi)
+2024 row 18 Sawbill: wrapped 1 -> 1441
+2024 row 21 Sawbill: wrapped 48 -> 1488
+2024 row 24 Sawbill: wrapped 1 -> 1441
+2024 row 26 Sawbill: wrapped 48 -> 1488
+2024 row 27 Sawbill: wrapped 48 -> 1488
+2024 row 28 Sawbill: wrapped 48 -> 1488
+2024 row 33 Temperance: wrapped 12 -> 1452
+2024 row 45 Temperance: wrapped 15 -> 1455
+2024 row 79 Cramer Road: wrapped 35 -> 1475
+2024 row 82 Cramer Road: wrapped 35 -> 1475
+2024 row 84 Cramer Road: wrapped 70 -> 1510
+2024 row 93 Cramer Road: wrapped 45 -> 1485
+2024 row 111 Cramer Road: wrapped 102 -> 1542
+2024 row 113 Sugarloaf: wrapped 15 -> 1455
+2024 row 114 Sugarloaf: wrapped 70 -> 1510
+2024 row 115 Sugarloaf: wrapped 55 -> 1495
+2024 row 128 Sugarloaf: wrapped 15 -> 1455
+2024 row 131 Sugarloaf: wrapped 110 -> 1550
+2024 row 136 Sugarloaf: wrapped 55 -> 1495
+2024 row 170 Temperance: wrapped 356 -> 1796
+2024 row 173 Sugarloaf: wrapped 145 -> 1585
+2024 row 173 Cramer Road: wrapped 287 -> 1727
+2024 row 174 Sugarloaf: wrapped 206 -> 1646
+2024 row 174 Cramer Road: wrapped 345 -> 1785
+2024 row 183 Sugarloaf: wrapped 242 -> 1682
+2024 row 183 Cramer Road: wrapped 408 -> 1848
+2024 row 189 Sugarloaf: wrapped 160 -> 1600
+2024 row 190 Sugarloaf: wrapped 185 -> 1625
+2025 row 26 Sawbill: wrapped 0 -> 1440
+2025 row 27 Sawbill: wrapped 19 -> 1459
+2025 row 28 Sawbill: wrapped 0 -> 1440
+2025 row 32 Tettegouche: nulled 354 (section faster than 8.0 min/mi)
+2025 row 32 County Road 6: nulled 486 (section faster than 8.0 min/mi)
+2025 row 36 Temperance: wrapped 30 -> 1470
+2025 row 38 Temperance: wrapped 14 -> 1454
+2025 row 40 Temperance: wrapped 37 -> 1477
+2025 row 42 Temperance: wrapped 37 -> 1477
+2025 row 45 Temperance: wrapped 14 -> 1454
+2025 row 46 Temperance: wrapped 52 -> 1492
+2025 row 71 Cramer Road: wrapped 7 -> 1447
+2025 row 80 Cramer Road: wrapped 45 -> 1485
+2025 row 84 Cramer Road: wrapped 28 -> 1468
+2025 row 111 Cramer Road: wrapped 80 -> 1520
+2025 row 111 Silver Bay: nulled 310 (section faster than 8.0 min/mi)
+2025 row 170 Sugarloaf: wrapped 102 -> 1542
+2025 row 170 Cramer Road: wrapped 244 -> 1684
+2025 row 170 Temperance: wrapped 389 -> 1829
+2025 row 173 Sugarloaf: wrapped 45 -> 1485
+2025 row 173 Cramer Road: wrapped 175 -> 1615
+2025 row 174 Sugarloaf: wrapped 102 -> 1542
+2025 row 174 Cramer Road: wrapped 255 -> 1695
+2025 row 175 Sugarloaf: wrapped 102 -> 1542
+2025 row 185 Sugarloaf: wrapped 133 -> 1573
+2025 row 186 Sugarloaf: wrapped 160 -> 1600

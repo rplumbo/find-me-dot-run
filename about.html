@@ -22,51 +22,51 @@
       <h2 class="about-heading">The data</h2>
       <p>This app uses <strong>2,507 public runner performances</strong> from Superior 100 races held from 2014 through 2025, excluding 2020. The records contain passage times at up to 14 aid stations, from Split Rock through the finish.</p>
       <p>A person who raced in several years contributes one performance for each year. Missing splits are allowed, so not every performance contains every aid station.</p>
+      <p>Timing errors are removed when the data is built, and every removal is logged: 36 splits implying impossible section paces were dropped (0.1% of ~29,000), 133 past-midnight clock wraps were repaired, and Split Rock times before 2017 are excluded because the course changed there.</p>
     </div>
 
     <div class="about-section card">
-      <h2 class="about-heading">Building the matching group</h2>
-      <p>Your aid station selections define a fresh historical cohort for every upcoming station. A performance must match the latest sighting within <strong>10 minutes</strong>. When enough records are available, it must also match the previous sighting within 10 minutes.</p>
-      <p>If matching both recent sightings leaves fewer than 20 candidates, the app matches the latest sighting only. Every historical performance that meets the matching and validity requirements contributes equally to the results. At least five matching performances are required to show results.</p>
+      <h2 class="about-heading">Building the group</h2>
+      <p>Your most recent sighting defines the group: every historical performance that reached that aid station within <strong>10 minutes</strong> of your sighting. If fewer than 40 match, the window widens to 15, then 20 minutes. At least five are required to show results.</p>
+      <p>Older sightings are shown for reference but do not change the estimates. We tested this: matching on an earlier sighting as well, at any distance back, did not improve accuracy; it only shrank the group.</p>
+      <p>Every performance in the group counts equally. Nothing is weighted, modeled, or excluded at query time.</p>
     </div>
 
     <div class="about-section card">
       <h2 class="about-heading">Turning history into clock times</h2>
-      <p>The app measures how long each cohort member took to travel from your runner's latest known aid station to the upcoming station. It adds those historical travel times to your runner's actual sighting time.</p>
+      <p>The app measures how long each group member took to travel from your runner's latest sighted aid station to the upcoming station, and adds those real travel times to your sighting time.</p>
       <p>This means the app does not copy a historical runner's absolute time of day. A runner seen at Sawbill at 1 PM is compared using historical Sawbill-to-Oberg travel durations, all starting from 1 PM on the current race clock.</p>
-      <p>Station-pair-specific statistical bounds remove implausible segment durations before the results are calculated.</p>
     </div>
 
     <div class="about-section card">
       <h2 class="about-heading">Reading the results</h2>
       <ul class="about-list">
-        <li><strong>Fastest</strong> is the shortest valid travel time in the cohort matching your input times.</li>
-        <li><strong>Typical</strong> is the median travel time. Half of the cohort was faster and half was slower.</li>
-        <li><strong>Slower</strong> is the 90th-percentile travel time. Nine in ten cohort members were this fast or faster.</li>
+        <li><strong>No one earlier than</strong> is your sighting time plus the fastest that section has ever been covered in 11 years. To arrive before your runner with near-certainty, be there by this time.</li>
+        <li><strong>Earliest</strong> is the earliest arrival among the matching runners.</li>
+        <li><strong>Middle 50%</strong> is the window that contained half of the group, and the most likely time to see your runner.</li>
+        <li><strong>Last 5% after</strong>: one in twenty of the group arrived later than this. Runners can only drop at an aid station, so if this time passes, ask the aid-station crew before assuming a problem.</li>
       </ul>
-      <p>Slower is not the slowest possible result. One in ten matching performances took longer. The app displays the number of historical performances used for each station.</p>
-    </div>
-
-    <div class="about-section card">
-      <h2 class="about-heading">Multiple sightings</h2>
-      <p>Every new sighting rebuilds the cohort. The latest one or two sightings define the match, with the most recent race information taking priority.</p>
-      <p>The newest actual sighting also becomes the starting point for every remaining travel-time calculation. This prevents an older absolute clock time from producing an impossible upcoming segment.</p>
+      <p>The app always shows how many runners are in the group and the window used to build it.</p>
     </div>
 
     <div class="about-section card">
       <h2 class="about-heading">How the method was tested</h2>
-      <p>The model was tested with leave-one-year-out backtesting. For each test, one race year was hidden, the cohorts were built from every other year, and each hidden runner's next aid station was evaluated using only their sightings up to that point.</p>
-      <p>The test produced <strong>23,935 next-station results</strong> from 24,160 eligible transitions, for 99.1% coverage. The displayed Fastest time was still later than the runner's actual passage in 3.5% of those results.</p>
-      <p>This is why Fastest is a historical cohort statistic, not a guaranteed earliest arrival.</p>
+      <p>Every claim above is verified by leave-one-year-out backtesting (<code>tools/backtest.py</code>): one race year is hidden, groups are built from every other year, and each hidden runner's recorded splits are replayed as sightings: <strong>24,875 predictions across 2,407 runner-races</strong>.</p>
+      <ul class="about-list">
+        <li>"No one earlier than" was beaten in 0.08% of predictions (1 in 1,250), only by runners setting a new section record, and at least once in 0.8% of full races.</li>
+        <li>"Earliest" was beaten 2.5% of the time (about 1 in 40), which is what a sample minimum should do.</li>
+        <li>The "middle 50%" window contained the actual arrival 49.7% of the time.</li>
+      </ul>
+      <p>The test fails loudly if a future data or code change breaks any of these numbers.</p>
     </div>
 
     <div class="about-section card">
       <h2 class="about-heading">Important limitations</h2>
       <ul class="about-list">
-        <li>These statistics describe historical cohorts, not your specific runner. Weather, injury, aid station stops, and race-day decisions can change the result.</li>
-        <li>If missing your runner is unacceptable, do not treat Fastest as a guaranteed safe arrival time. Account for your own driving, parking, and walking margin.</li>
-        <li>Public timing records can contain missing or incorrect splits. The outlier filter reduces obvious errors but cannot identify every data problem.</li>
-        <li>Aid station names and course distances have changed slightly across years. The model uses recorded passage times and station order.</li>
+        <li>These statistics describe historical groups, not your specific runner. Weather, injury, aid station stops, and race-day decisions can change the result.</li>
+        <li>"No one earlier than" is beaten only by new section records, but it is not magic. Leave margin for your own driving, parking, and walking.</li>
+        <li>Public timing records can contain missing or incorrect splits. The build-time scrub removes obvious errors (and logs each one), but cannot identify every data problem.</li>
+        <li>Aid station names and course distances have changed slightly across years. The model uses recorded passage times and station order, and excludes pre-2017 Split Rock times where the course change was material.</li>
       </ul>
     </div>
 
