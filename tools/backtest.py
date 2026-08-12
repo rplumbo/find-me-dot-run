@@ -1,14 +1,16 @@
 """
 Leave-one-year-out backtest of the Spectator Guide's cohort statistics.
 
-This is the verification gate for the claims the app makes to families:
+This is the verification gate for the claims the app makes to families.
+Every displayed statistic comes from ONE group: the runners who reached the
+sighted station near the sighted time. The gate checks that those group
+statistics stay honest for future runners:
 
-  1. "Never earlier than" (the fastest-ever section duration) is beaten by
-     a future runner almost never (<= 0.3% of predictions, <= 1.5% of races).
-  2. "Earliest of this cohort" behaves like a sample minimum should
-     (beaten 1-4% of the time).
-  3. The "middle 50%" band actually contains ~50% of future arrivals.
-  4. The "earliest 5%" boundary is beaten <= 8% of the time.
+  1. "Earliest" (the group minimum, the display's lower bound) behaves like
+     a sample minimum should: beaten 1-4% of the time.
+  2. "Half arrived by" (the median) splits future arrivals ~50/50.
+  3. The middle-half window (1-in-4 to 3-in-4) contains ~50% of arrivals.
+  4. "19 of 20 by" is exceeded by roughly 1 in 20 arrivals (<= 8%).
 
 It replicates js/track.js predict() EXACTLY (same windows, same widening,
 same percentile rule) on scrubbed data from build_model.load_all_runners().
@@ -46,7 +48,7 @@ def pct(sorted_ts, p):
     return sorted_ts[-1]
 
 
-def predict(train, section_records, observations, target_idx):
+def predict(train, observations, target_idx):
     """Mirror of js/track.js predict()."""
     relevant = [o for o in observations if o[0] < target_idx]
     if not relevant:
@@ -76,9 +78,7 @@ def predict(train, section_records, observations, target_idx):
     if len(durations) < MIN_COHORT_SIZE:
         return None
     ts = sorted(latest_min + d for d in durations)
-    rec = section_records.get((latest_idx, target_idx))
     return {
-        "recordFloor": latest_min + rec if rec is not None else ts[0],
         "p0": ts[0],
         "p05": pct(ts, 0.05),
         "p25": pct(ts, 0.25),
@@ -88,23 +88,6 @@ def predict(train, section_records, observations, target_idx):
         "n": len(ts),
         "dnf": dnf,
     }
-
-
-def build_section_records(train):
-    records = {}
-    for s in range(N_STATIONS):
-        for t in range(s + 1, N_STATIONS):
-            best = None
-            for r in train:
-                a, b = r[s], r[t]
-                if a is None or b is None or b < a:
-                    continue
-                d = b - a
-                if best is None or d < best:
-                    best = d
-            if best is not None:
-                records[(s, t)] = best
-    return records
 
 
 def r5(m):
@@ -120,64 +103,62 @@ def main():
     years = sorted(by_year)
 
     n_pred = 0
-    beat_floor = 0
     beat_p0 = 0
-    beat_p05 = 0
+    beat_p50 = 0
+    beat_p95 = 0
     in_band = 0
     races = 0
-    races_beat_floor = 0
+    races_beat_p0 = 0
     no_prediction = 0
 
     for test_year in years:
         train = [r for y in years if y != test_year for r in by_year[y]]
-        records = build_section_records(train)
         for splits in by_year[test_year]:
             recorded = [k for k in range(N_STATIONS) if splits[k] is not None]
             race_beat = False
             race_preds = 0
             for i in range(len(recorded) - 1):
                 k, tgt = recorded[i], recorded[i + 1]
-                pr = predict(train, records, [(k, r5(splits[k]))], tgt)
+                pr = predict(train, [(k, r5(splits[k]))], tgt)
                 if not pr:
                     no_prediction += 1
                     continue
                 actual = splits[tgt]
                 n_pred += 1
                 race_preds += 1
-                if actual < pr["recordFloor"]:
-                    beat_floor += 1
-                    race_beat = True
                 if actual < pr["p0"]:
                     beat_p0 += 1
-                if actual < pr["p05"]:
-                    beat_p05 += 1
+                    race_beat = True
+                if actual < pr["p50"]:
+                    beat_p50 += 1
+                if actual > pr["p95"]:
+                    beat_p95 += 1
                 if pr["p25"] <= actual <= pr["p75"]:
                     in_band += 1
             if race_preds >= 3:
                 races += 1
                 if race_beat:
-                    races_beat_floor += 1
+                    races_beat_p0 += 1
 
-    floor_rate = beat_floor / n_pred
-    floor_race_rate = races_beat_floor / races
     p0_rate = beat_p0 / n_pred
-    p05_rate = beat_p05 / n_pred
+    p0_race_rate = races_beat_p0 / races
+    p50_rate = beat_p50 / n_pred
+    p95_rate = beat_p95 / n_pred
     cov = in_band / n_pred
 
     print(f"predictions: {n_pred}  (no prediction possible: {no_prediction})")
     print(f"races (>=3 predictions): {races}")
-    print(f"beat 'never earlier than' floor: {beat_floor} ({floor_rate:.3%} of predictions, "
-          f"{floor_race_rate:.2%} of races)")
-    print(f"beat cohort earliest (p0):       {beat_p0} ({p0_rate:.2%})")
-    print(f"beat earliest-5% boundary (p05): {beat_p05} ({p05_rate:.2%})")
-    print(f"middle-50% band coverage:        {cov:.1%}")
+    print(f"arrived before group Earliest:  {beat_p0} ({p0_rate:.2%} of predictions, "
+          f"{p0_race_rate:.1%} of races at least once)")
+    print(f"arrived before 'half by':       {beat_p50} ({p50_rate:.1%})")
+    print(f"arrived after '19 of 20 by':    {beat_p95} ({p95_rate:.2%})")
+    print(f"middle-half window coverage:    {cov:.1%}")
 
     checks = [
-        ("record floor beaten <= 0.3% of predictions", floor_rate <= 0.003),
-        ("record floor beaten <= 1.5% of races", floor_race_rate <= 0.015),
-        ("cohort earliest beaten 1-4%", 0.01 <= p0_rate <= 0.04),
-        ("earliest-5% boundary beaten <= 8%", p05_rate <= 0.08),
-        ("middle-50% coverage 47-53%", 0.47 <= cov <= 0.53),
+        ("group earliest beaten 1-4%", 0.01 <= p0_rate <= 0.04),
+        ("half-by splits arrivals 47-53%", 0.47 <= p50_rate <= 0.53),
+        ("19-of-20 exceeded <= 8%", p95_rate <= 0.08),
+        ("middle-half coverage 47-53%", 0.47 <= cov <= 0.53),
     ]
     failed = [name for name, ok in checks if not ok]
     for name, ok in checks:

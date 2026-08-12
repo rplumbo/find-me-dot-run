@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Track Runner · Superior 100 Spectator Guide</title>
-  <link rel="stylesheet" href="css/style.css?v=34">
+  <link rel="stylesheet" href="css/style.css?v=37">
 </head>
 <body>
 
@@ -65,11 +65,11 @@
         <aside id="range-explainer" class="range-explainer hidden" aria-labelledby="range-explainer-title">
           <h3 id="range-explainer-title">How to Read These Times</h3>
           <dl>
-            <div><dt>Record pace</dt><dd>Your sighting time plus the fastest this section has ever been run in 11 years of races, a mark held by race winners (before your first sighting, it is the earliest anyone has ever reached that station). If you absolutely cannot miss your runner, be there by this time. In backtesting it was beaten in fewer than 1 in 1,000 cases, and only by new course records.</dd></div>
-            <div><dt>Similar runners</dt><dd>Past runners who reached your last sighted station within a few minutes of your runner (before your first sighting, runners who finished near the Compare To time). Each row shows the exact group size and window. The three lines below describe this group, and they are usually the better planning guide: a mid-pack runner does not move at record pace.</dd></div>
-            <div><dt>Earliest</dt><dd>The earliest arrival among the similar runners. In 11 years, nobody in your runner's position has arrived before this. About 1 in 40 future runners beat their group's earliest.</dd></div>
-            <div><dt>Most likely</dt><dd>Half of the similar runners arrived inside this window (the strong blue segment of the bar). The best guess for when you'll see your runner.</dd></div>
-            <div><dt>Last 5%</dt><dd>1 in 20 of the similar runners arrived later than this. Runners can only drop out at an aid station, so if this time passes, ask the aid-station crew before assuming a problem.</dd></div>
+            <div><dt>Similar runners</dt><dd>Every statistic in a row comes from one group: the past runners who reached your last sighted station within a few minutes of your runner (before your first sighting, runners who finished near the Compare To time). Each row states the exact group size and window.</dd></div>
+            <div><dt>Earliest Ever</dt><dd>The left dot: the earliest any of the similar runners has ever arrived. In 11 years of races, nobody sighted where your runner was has arrived before this. In backtesting, about 1 in 40 future runners arrived before their group's earliest, usually by a few minutes.</dd></div>
+            <div><dt>Half by</dt><dd>The median, shown at the top of each row: half the group had arrived by this time, half were still out.</dd></div>
+            <div><dt>25% / 75%</dt><dd>The light segment of the bar is the middle half of arrivals: 25% of the group had arrived by its left edge, 75% by its right.</dd></div>
+            <div><dt>95%</dt><dd>The right dot. 1 in 20 of the group arrived later than this. Runners can only drop out at an aid station, so if this time passes, ask the aid-station crew before assuming a problem.</dd></div>
           </dl>
           <p>Every number is a plain statistic of real past runners; nothing is modeled or weighted. The group is rebuilt from your most recent sighting only. Older sightings are shown for reference but don't change the estimates (testing showed they don't help). All times come from official race timing, and data errors were removed at build time with a public log.</p>
         </aside>
@@ -112,6 +112,6 @@
   </main>
 
   <script src="js/sw-register.js"></script>
-  <script src="js/track.js?v=50"></script>
+  <script src="js/track.js?v=54"></script>
 </body>
 </html>
