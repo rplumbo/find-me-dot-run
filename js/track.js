@@ -811,19 +811,20 @@ function bindEvents() {
 async function init() {
   try {
     await loadData();
+    loadState();
+    setupControls();
+    chooseDefaultSightingStation();
+    bindEvents();
+    document.getElementById('track-loading').classList.add('hidden');
+    document.getElementById('track-ui').classList.remove('hidden');
+    render();
   } catch (err) {
+    // Never leave the loading spinner up: show what went wrong instead.
     document.getElementById('track-loading').innerHTML =
-      '<p style="color:#f87171;padding:2rem">Failed to load race data. Open this page once with a connection before relying on offline use.</p>';
-    return;
+      '<p style="color:#f87171;padding:2rem">Failed to load race data. ' +
+      'Open this page once with a connection before relying on offline use.<br>' +
+      '<span style="font-size:0.8em;opacity:0.7">' + escapeHtml(String(err && err.message || err)) + '</span></p>';
   }
-
-  loadState();
-  setupControls();
-  chooseDefaultSightingStation();
-  bindEvents();
-  document.getElementById('track-loading').classList.add('hidden');
-  document.getElementById('track-ui').classList.remove('hidden');
-  render();
 }
 
 document.addEventListener('DOMContentLoaded', init);

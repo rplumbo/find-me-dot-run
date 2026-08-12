@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 's100-spectator-';
-const CACHE_NAME = 's100-spectator-v43';
+const CACHE_NAME = 's100-spectator-v44';
 
 const CORE_ASSETS = [
   './',
@@ -45,14 +45,12 @@ self.addEventListener('activate', event => {
     caches.keys().then(async keys => {
       const oldAppCaches = keys.filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME);
       await Promise.all(oldAppCaches.map(key => caches.delete(key)));
+      // Take control of open pages. Do NOT navigate them from here:
+      // a navigation can wait on activation while activation waits on the
+      // navigation, wedging the worker (Safari stalls ~1 min, then force
+      // reloads). The page reloads itself on controllerchange instead
+      // (see js/sw-register.js).
       await self.clients.claim();
-
-      // Existing pages already loaded their assets through the old worker.
-      // Reload them once so the newly activated worker can serve current code.
-      if (oldAppCaches.length) {
-        const windows = await self.clients.matchAll({ type: 'window' });
-        await Promise.all(windows.map(client => client.navigate(client.url).catch(() => null)));
-      }
     })
   );
 });
