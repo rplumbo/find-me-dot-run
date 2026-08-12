@@ -41,8 +41,8 @@
     <div class="about-section card">
       <h2 class="about-heading">Reading the results</h2>
       <ul class="about-list">
-        <li><strong>No one earlier than</strong> is your sighting time plus the fastest that section has ever been covered in 11 years. To arrive before your runner with near-certainty, be there by this time.</li>
-        <li><strong>Earliest</strong> is the earliest arrival among the matching runners.</li>
+        <li><strong>Record pace</strong> is your sighting time plus the fastest that section has ever been run in 11 years, a mark held by race winners. To arrive before your runner with near-certainty, be there by this time.</li>
+        <li><strong>Earliest</strong> is the earliest arrival among the similar runners: in 11 years, nobody in your runner’s position has arrived before it.</li>
         <li><strong>Middle 50%</strong> is the window that contained half of the group, and the most likely time to see your runner.</li>
         <li><strong>Last 5% after</strong>: one in twenty of the group arrived later than this. Runners can only drop at an aid station, so if this time passes, ask the aid-station crew before assuming a problem.</li>
       </ul>
@@ -53,7 +53,7 @@
       <h2 class="about-heading">How the method was tested</h2>
       <p>Every claim above is verified by leave-one-year-out backtesting (<code>tools/backtest.py</code>): one race year is hidden, groups are built from every other year, and each hidden runner's recorded splits are replayed as sightings: <strong>24,875 predictions across 2,407 runner-races</strong>.</p>
       <ul class="about-list">
-        <li>"No one earlier than" was beaten in 0.08% of predictions (1 in 1,250), only by runners setting a new section record, and at least once in 0.8% of full races.</li>
+        <li>"Record pace" was beaten in 0.08% of predictions (1 in 1,250), only by runners setting a new section record, and at least once in 0.8% of full races.</li>
         <li>"Earliest" was beaten 2.5% of the time (about 1 in 40), which is what a sample minimum should do.</li>
         <li>The "middle 50%" window contained the actual arrival 49.7% of the time.</li>
       </ul>
@@ -64,7 +64,7 @@
       <h2 class="about-heading">Important limitations</h2>
       <ul class="about-list">
         <li>These statistics describe historical groups, not your specific runner. Weather, injury, aid station stops, and race-day decisions can change the result.</li>
-        <li>"No one earlier than" is beaten only by new section records, but it is not magic. Leave margin for your own driving, parking, and walking.</li>
+        <li>"Record pace" is beaten only by new section records, but it is not magic. Leave margin for your own driving, parking, and walking.</li>
         <li>Public timing records can contain missing or incorrect splits. The build-time scrub removes obvious errors (and logs each one), but cannot identify every data problem.</li>
         <li>Aid station names and course distances have changed slightly across years. The model uses recorded passage times and station order, and excludes pre-2017 Split Rock times where the course change was material.</li>
       </ul>

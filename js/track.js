@@ -617,35 +617,80 @@ function minToRangeStr(a, b) {
   return `${oa.display} <span class="day-tag-inline">${oa.day}</span>–${ob.display} <span class="day-tag-inline">${ob.day}</span>`;
 }
 
-function bandLinesHtml(floorLabel, floorMin, bands) {
+/**
+ * The estimate visualization: a proportional time strip from record pace to
+ * the last 5% of similar runners. The empty left span IS the story: nobody
+ * like your runner has ever arrived there. Positions are true to the clock.
+ *
+ *   floor  = record pace (gold marker, x = 0)
+ *   band   = earliest -> last 5% of similar runners (light blue)
+ *   mid    = middle 50% (strong blue, ringed)
+ *   ref    = optional comparison time (muted diamond)
+ */
+function estimateStripHtml(floorMin, bands, ref) {
+  const span = bands.p95 - floorMin;
+  if (span < 2) return '';
+  const pos = t => Math.max(0, Math.min(104, (t - floorMin) / span * 100));
+  const refMark = ref && ref.t >= floorMin && pos(ref.t) <= 103
+    ? `<div class="est-ref" style="left:${pos(ref.t).toFixed(1)}%" title="${escapeHtml(ref.label)}"></div>`
+    : '';
   return `
-      <div class="range-line range-strong">
-        <span>${floorLabel}</span>
+    <div class="est-strip" aria-hidden="true">
+      <div class="est-base"></div>
+      <div class="est-band" style="left:${pos(bands.p0).toFixed(1)}%;width:${(pos(bands.p95) - pos(bands.p0)).toFixed(1)}%"></div>
+      <div class="est-mid" style="left:${pos(bands.p25).toFixed(1)}%;width:${Math.max(pos(bands.p75) - pos(bands.p25), 1.5).toFixed(1)}%"></div>
+      <div class="est-record"></div>
+      ${refMark}
+    </div>`;
+}
+
+function refNoteHtml(ref) {
+  return ref
+    ? ` · <span class="est-ref-key" aria-hidden="true"></span>${escapeHtml(ref.label)}: ${minToClockStr(ref.t)}`
+    : '';
+}
+
+function estimateBodyHtml(floorMin, bands, ref) {
+  return `
+    <div class="est-likely">
+      <span class="est-likely-label">Most likely</span>
+      <strong>${minToRangeStr(bands.p25, bands.p75)}</strong>
+    </div>
+    ${estimateStripHtml(floorMin, bands, ref)}
+    <div class="est-anchors">
+      <div class="est-anchor">
+        <span><i class="est-record-key"></i>Record pace</span>
         <strong>${minToClockStr(floorMin)}</strong>
       </div>
-      <div class="range-line">
+      <div class="est-anchor est-anchor-mid">
         <span>Earliest</span>
         <strong>${minToClockStr(bands.p0)}</strong>
       </div>
-      <div class="range-line">
-        <span>Middle 50%</span>
-        <strong>${minToRangeStr(bands.p25, bands.p75)}</strong>
-      </div>
-      <div class="range-line range-muted">
-        <span>Last 5% after</span>
+      <div class="est-anchor est-anchor-end">
+        <span>Last 5%</span>
         <strong>${minToClockStr(bands.p95)}</strong>
-      </div>`;
+      </div>
+    </div>`;
+}
+
+function comparisonRef(stationIndex) {
+  const entry = comparisonEntry();
+  if (!entry) return null;
+  const t = entry.splits[stationIndex];
+  if (t === null || t === undefined) return null;
+  return { t, label: `${entry.label} ${entry.kind === 'runner' ? 'actual' : 'typical'}` };
 }
 
 function estimateRowHtml(station, stationIndex, pred, isNext, markAttrs) {
   const sightedName = AID_STATIONS[pred.latestStationIndex].name;
-  return `<div class="checkpoint-row is-estimate${isNext ? ' is-next' : ''}"${markAttrs}>
-    <div>
+  const ref = comparisonRef(stationIndex);
+  return `<div class="checkpoint-row is-estimate est-row${isNext ? ' is-next' : ''}"${markAttrs}>
+    <div class="est-head">
       <div class="checkpoint-name">${escapeHtml(station.name)}</div>
       <div class="checkpoint-meta">Mile ${station.distance}</div>
     </div>
-    <div class="checkpoint-time checkpoint-range">${bandLinesHtml('No one earlier', pred.recordFloor, pred)}</div>
-    <div class="range-sample">Using ${pred.n} runners who reached ${escapeHtml(sightedName)} within ${pred.window} min of your sighting.</div>
+    ${estimateBodyHtml(pred.recordFloor, pred, ref)}
+    <div class="range-sample">${pred.n} similar runners: reached ${escapeHtml(sightedName)} within ${pred.window} min of your sighting${refNoteHtml(ref)}</div>
   </div>`;
 }
 
@@ -678,19 +723,16 @@ function preRaceAnchor() {
 
 function preRaceRowHtml(station, stationIndex, bands, anchor, markAttrs) {
   const refSplit = anchor.entry.splits[stationIndex];
-  const refLine = refSplit !== null && refSplit !== undefined
-    ? `<div class="range-line range-muted">
-        <span>${escapeHtml(anchor.entry.label)} ${anchor.entry.kind === 'runner' ? 'actual' : 'typical'}</span>
-        <strong>${minToClockStr(refSplit)}</strong>
-      </div>`
-    : '';
-  return `<div class="checkpoint-row is-estimate"${markAttrs}>
-    <div>
+  const ref = refSplit !== null && refSplit !== undefined
+    ? { t: refSplit, label: `${anchor.entry.label} ${anchor.entry.kind === 'runner' ? 'actual' : 'typical'}` }
+    : null;
+  return `<div class="checkpoint-row is-estimate est-row"${markAttrs}>
+    <div class="est-head">
       <div class="checkpoint-name">${escapeHtml(station.name)}</div>
       <div class="checkpoint-meta">Mile ${station.distance}</div>
     </div>
-    <div class="checkpoint-time checkpoint-range">${bandLinesHtml('No one earlier', bands.earliestEver, bands)}${refLine}</div>
-    <div class="range-sample">Using ${bands.n} runners ${anchor.desc}.</div>
+    ${estimateBodyHtml(bands.earliestEver, bands, ref)}
+    <div class="range-sample">${bands.n} similar runners: ${anchor.desc}${refNoteHtml(ref)}</div>
   </div>`;
 }
 
@@ -775,7 +817,7 @@ function renderCheckpointPlan() {
   }).join('');
 
   document.getElementById('range-explainer')
-    .classList.toggle('hidden', !list.querySelector('.checkpoint-range'));
+    .classList.toggle('hidden', !list.querySelector('.est-row'));
 
   list.querySelectorAll('[data-remove-station]').forEach(btn => {
     btn.addEventListener('click', event => {
