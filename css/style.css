@@ -2278,43 +2278,21 @@ select {
   margin: 0 0 0.55rem;
 }
 
-.range-explainer dl {
-  display: grid;
-  gap: 0.3rem;
-  margin: 0;
-}
-
-.range-explainer dl div {
-  display: grid;
-  grid-template-columns: 6.2rem minmax(0, 1fr);
-  gap: 0.55rem;
-}
-
-.range-explainer dt {
-  white-space: nowrap;
-}
-
-.range-explainer dt,
-.range-explainer dd,
 .range-explainer p {
-  font-size: 0.66rem;
-  line-height: 1.35;
-  margin: 0;
-}
-
-.range-explainer dt {
-  color: var(--text-muted);
-  font-weight: 800;
-}
-
-.range-explainer dd,
-.range-explainer p {
+  font-size: 0.68rem;
+  line-height: 1.5;
+  margin: 0 0 0.55rem;
   color: var(--text-faint);
   font-weight: 650;
 }
 
-.range-explainer p {
-  margin-top: 0.55rem;
+.range-explainer p strong {
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.range-explainer p:last-child {
+  margin-bottom: 0;
 }
 
 .checkpoint-add-link {

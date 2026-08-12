@@ -866,12 +866,15 @@ function renderCheckpointPlan() {
       openSightingSheet(stationIndex);
     });
   });
+
+  // Timeline labels are absolutely positioned; every render of the plan
+  // must be followed by the layout pass or they pile up at the left edge.
+  layoutTimelines();
 }
 
 function render() {
   renderSelectedRunner();
   renderCheckpointPlan();
-  layoutTimelines();
 }
 
 function bindEvents() {
