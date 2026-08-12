@@ -22,7 +22,7 @@
       <h2 class="about-heading">The data</h2>
       <p>This app uses <strong>2,507 public runner performances</strong> from Superior 100 races held from 2014 through 2025, excluding 2020. The records contain passage times at up to 14 aid stations, from Split Rock through the finish.</p>
       <p>A person who raced in several years contributes one performance for each year. Missing splits are allowed, so not every performance contains every aid station.</p>
-      <p>Timing errors are removed when the data is built, and every removal is logged: 36 splits implying impossible section paces were dropped (0.1% of ~29,000), 133 past-midnight clock wraps were repaired, and Split Rock times before 2017 are excluded because the course changed there.</p>
+      <p>Timing errors are removed when the data is built, and every removal is logged. Each race is checked against the field: a wrong split makes its two adjacent sections disagree wildly with the field’s typical time for those exact sections, and the split whose removal restores a normal race is dropped. A physical floor (no section faster than 8 min/mile) catches timing-station glitches that hit a whole pack identically. In total 49 of ~29,000 splits were dropped and 133 past-midnight clock wraps repaired; Split Rock times before 2017 are excluded because the course changed there.</p>
     </div>
 
     <div class="about-section card">
@@ -53,8 +53,8 @@
       <h2 class="about-heading">How the method was tested</h2>
       <p>Every claim above is verified by leave-one-year-out backtesting (<code>tools/backtest.py</code>): one race year is hidden, groups are built from every other year, and each hidden runner's recorded splits are replayed as sightings: <strong>24,875 predictions across 2,407 runner-races</strong>.</p>
       <ul class="about-list">
-        <li>"Earliest" was beaten 2.5% of the time (about 1 in 40), which is what a sample minimum should do. Across a whole race, a runner beats at least one of their group minimums in about 1 in 5 races, usually by a few minutes.</li>
-        <li>"Half by" split future arrivals 48.7% / 51.3%.</li>
+        <li>"Earliest" was beaten 2.4% of the time (about 1 in 40), which is what a sample minimum should do. Across a whole race, a runner beats at least one of their group minimums in about 1 in 5 races, usually by a few minutes.</li>
+        <li>"Half by" split future arrivals 48.6% / 51.4%.</li>
         <li>The middle-half window (1 in 4 to 3 in 4) contained the actual arrival 49.7% of the time.</li>
         <li>The "95%" mark was exceeded by 6.2% of arrivals.</li>
       </ul>

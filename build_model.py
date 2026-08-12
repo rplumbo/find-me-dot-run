@@ -75,14 +75,38 @@ N_STATIONS      = len(AID_STATIONS)
 FINISH_PERCENTILES = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 FINISH_CUTOFF_MINUTES = 38 * 60
 
-# Scrub thresholds. The fastest section pace ever run here by a winner is
-# ~9 min/mile (early, downhill-heavy sections); anything under 8 is a
-# timing error. Sections longer than 14 hours exceed what aid-station
-# cutoffs allow and mark a bad wraparound repair. Cumulative pace beyond
-# 28 min/mile is slower than sweep cutoffs permit (legit all-time maxima
-# run ~25.7) and marks a slow-side typo.
+# Scrub thresholds. Every test is relative to the field's own median
+# duration for the exact station pair, so each section carries its own
+# calibration (a global min/mile floor is simultaneously too lenient on
+# late sections and too strict on early ones).
+#
+#   HARD_RATIO   a section under 0.2x the field median is impossible for
+#                anyone (the fastest genuine section ever observed is
+#                ~0.44x, mid-race by a course-record winner)
+#   SOFT_RATIO / JUMP   under 0.62x is faster than any winner, but real
+#                winners live at 0.44-0.6 CONSISTENTLY, so it only counts
+#                as an error when it disagrees with the runner's own
+#                adjacent sections by 3x (a typo corrupts both neighbors
+#                in opposite directions; a fast runner is fast everywhere)
+#   EDGE_LEVEL_FRAC   a first/last recorded split has no second neighbor
+#                to disagree with, so it is tested against the runner's
+#                own median ratio across the rest of their race
+#   WRAP_RATIO   a +24h wraparound repair is accepted only if the implied
+#                section is plausible
+#   MIN_SECTION_PACE   fast-side backstop: under 8 min/mile is beyond any
+#                genuine section here. Needed because a timing-station
+#                glitch hits a PACK of runners identically, leaving each
+#                individual race self-consistent; per-race jump detection
+#                cannot see correlated errors, physics can
+#   MAX_CUMULATIVE_PACE   slow-side backstop: cumulative pace beyond
+#                28 min/mile is slower than sweep cutoffs permit (legit
+#                all-time maxima run ~25.7)
+HARD_RATIO = 0.2
+SOFT_RATIO = 0.62
+JUMP = 3.0
+EDGE_LEVEL_FRAC = 0.5
+WRAP_RATIO = (0.35, 6.0)
 MIN_SECTION_PACE = 8.0          # minutes per mile
-MAX_SECTION_MINUTES = 14 * 60
 MAX_CUMULATIVE_PACE = 28.0      # minutes per mile from the start
 SPLIT_ROCK_FIRST_VALID_YEAR = 2017  # course changed; older station-0 times differ
 
@@ -119,75 +143,145 @@ def parse_finish_time(s: str) -> int | None:
 #  Scrubbing
 # ─────────────────────────────────────────────
 
-def section_pace(t_from: int, t_to: int, k_from: int, k_to: int) -> float:
-    return (t_to - t_from) / (DISTANCES[k_to] - DISTANCES[k_from])
-
-
-def scrub_splits(splits: list, log: list, ctx: str) -> list:
-    """
-    Repair 24h wraparound and remove timing errors, appending one line per
-    change to `log`. Returns the scrubbed splits (mutates in place too).
-    """
-    # Pass 1: wraparound repair with plausibility check.
+def crude_wrap_fix(splits: list) -> list:
+    """Blind monotonic +24h repair, used only to compute field medians."""
+    out = list(splits)
     last = None
-    last_k = None
+    for k in range(N_STATIONS):
+        if out[k] is not None:
+            if last is not None and out[k] < last:
+                out[k] += 1440
+            last = out[k]
+    return out
+
+
+def field_medians(all_splits: list) -> dict:
+    """
+    Median duration for every station pair (a, b), a < b, including the
+    virtual race start at index -1 (time 0). The scrub judges every section
+    against these.
+    """
+    med = {}
+    for a in range(-1, N_STATIONS - 1):
+        for b in range(a + 1, N_STATIONS):
+            ds = sorted(
+                tb - ta
+                for sp in all_splits
+                for ta in [0 if a == -1 else sp[a]]
+                for tb in [sp[b]]
+                if ta is not None and tb is not None and tb > ta
+            )
+            if len(ds) >= 20:
+                med[(a, b)] = ds[len(ds) // 2]
+    return med
+
+
+def scrub_splits(splits: list, med: dict, log: list, ctx: str) -> list:
+    """
+    Per-race scrub: every test compares a section of THIS runner's race to
+    the field's median duration for that exact station pair. Appends one
+    line per change to `log`. Mutates and returns `splits`.
+    """
+    def t(k):
+        return 0 if k == -1 else splits[k]
+
+    def ratio(a, b):
+        m = med.get((a, b))
+        if m is None or t(a) is None or t(b) is None:
+            return None
+        return (t(b) - t(a)) / m
+
+    def null(k, reason):
+        log.append(f"{ctx} {AID_STATIONS[k]['name']}: nulled {splits[k]} ({reason})")
+        splits[k] = None
+
+    # Pass 1: wraparound repair. Accept +24h only if the implied section is
+    # plausible against the field median for that pair.
+    last = None
+    last_k = -1
     for k in range(N_STATIONS):
         if splits[k] is None:
             continue
         if last is not None and splits[k] < last:
             fixed = splits[k] + 1440
-            dur = fixed - last
-            if section_pace(last, fixed, last_k, k) >= MIN_SECTION_PACE and dur <= MAX_SECTION_MINUTES:
+            m = med.get((last_k, k))
+            r = (fixed - last) / m if m else None
+            if r is not None and WRAP_RATIO[0] <= r <= WRAP_RATIO[1]:
                 log.append(f"{ctx} {AID_STATIONS[k]['name']}: wrapped {splits[k]} -> {fixed}")
                 splits[k] = fixed
             else:
-                log.append(f"{ctx} {AID_STATIONS[k]['name']}: nulled {splits[k]} (non-monotonic, +24h implausible)")
-                splits[k] = None
+                null(k, "non-monotonic, +24h implausible")
                 continue
         last = splits[k]
         last_k = k
 
-    # Pass 2: remove splits implying impossible section paces, measuring
-    # from the race start (index -1, time 0, mile 0) as well as between
-    # recorded splits. When a pair is bad, null the endpoint that also
-    # disagrees with its other neighbor; if ambiguous, trust the earlier
-    # split. The virtual start is never a victim.
-    def t(k: int) -> int:
-        return 0 if k == -1 else splits[k]
-
-    def miles(a: int, b: int) -> float:
-        return (DISTANCES[b] if b >= 0 else 0) - (DISTANCES[a] if a >= 0 else 0)
-
-    def bad_pair(a: int, b: int) -> bool:
-        return (t(b) - t(a)) / miles(a, b) < MIN_SECTION_PACE
-
+    # Pass 2: impossible sections. A section is an error when it is faster
+    # than 0.2x the field median (beyond any human), or faster than 0.62x
+    # AND 3x out of line with the runner's own adjacent sections (a real
+    # front-runner is fast consistently; a typo corrupts both neighbors in
+    # opposite directions). Blame the endpoint whose removal restores a
+    # normal race; when ambiguous, trust the earlier split.
     changed = True
     while changed:
         changed = False
         idx = [-1] + [k for k in range(N_STATIONS) if splits[k] is not None]
-        for pos in range(len(idx) - 1):
-            a, b = idx[pos], idx[pos + 1]
-            if not bad_pair(a, b):
+        for i in range(len(idx) - 1):
+            a, b = idx[i], idx[i + 1]
+            r = ratio(a, b)
+            if r is None or r >= SOFT_RATIO:
                 continue
-            if a != -1 and pos > 0 and bad_pair(idx[pos - 1], a):
-                victim = a
-            elif pos + 2 < len(idx) and bad_pair(b, idx[pos + 2]):
+            miles = (DISTANCES[b] if b >= 0 else 0) - (DISTANCES[a] if a >= 0 else 0)
+            pace = (t(b) - t(a)) / miles if miles > 0 else 99
+            r_prev = ratio(idx[i - 1], a) if i >= 1 else None
+            r_next = ratio(b, idx[i + 2]) if i + 2 < len(idx) else None
+            neighbors = [x for x in (r_prev, r_next) if x is not None]
+            jumpy = any(x / max(r, 1e-9) >= JUMP for x in neighbors)
+            if r >= HARD_RATIO and pace >= MIN_SECTION_PACE and not jumpy:
+                continue
+
+            reason = f"section {r:.2f}x field median"
+            prev_anom = r_prev is not None and (r_prev < SOFT_RATIO or r_prev / max(r, 1e-9) >= JUMP)
+            next_anom = r_next is not None and (r_next < SOFT_RATIO or r_next / max(r, 1e-9) >= JUMP)
+            skip_a = ratio(idx[i - 1], b) if (a != -1 and i >= 1) else None
+            skip_b = ratio(a, idx[i + 2]) if i + 2 < len(idx) else None
+            ok_a = skip_a is not None and 0.4 <= skip_a <= 4
+            ok_b = skip_b is not None and 0.4 <= skip_b <= 4
+            if a == -1:
                 victim = b
+            elif prev_anom and not next_anom:
+                victim = a
+            elif next_anom and not prev_anom:
+                victim = b
+            elif ok_a and not ok_b:
+                victim = a
+            elif ok_b and not ok_a:
+                victim = b
+            elif ok_a and ok_b:
+                victim = a if abs(math.log(skip_a)) <= abs(math.log(skip_b)) else b
             else:
                 victim = b
-            log.append(f"{ctx} {AID_STATIONS[victim]['name']}: nulled {splits[victim]} "
-                       f"(section faster than {MIN_SECTION_PACE} min/mi)")
-            splits[victim] = None
+            null(victim, reason)
             changed = True
             break
 
-    # Pass 3: slow-side typos — cumulative pace beyond what sweep cutoffs
+    # Pass 2b: edge splits (no second neighbor to disagree with) are tested
+    # against the runner's own level: the median of their other sections'
+    # normalized ratios. Needs at least 3 other sections to say anything.
+    idx = [-1] + [k for k in range(N_STATIONS) if splits[k] is not None]
+    if len(idx) >= 5:
+        ratios = [ratio(a, b) for a, b in zip(idx, idx[1:])]
+        ratios = [x for x in ratios if x is not None]
+        if len(ratios) >= 4:
+            level = sorted(ratios)[len(ratios) // 2]
+            last_r = ratio(idx[-2], idx[-1])
+            if last_r is not None and last_r < level * EDGE_LEVEL_FRAC:
+                null(idx[-1], f"final section {last_r:.2f}x field median vs runner's {level:.2f}x level")
+
+    # Pass 3: slow-side backstop. Cumulative pace beyond what sweep cutoffs
     # allow cannot be genuine.
     for k in range(N_STATIONS):
         if splits[k] is not None and splits[k] > MAX_CUMULATIVE_PACE * DISTANCES[k]:
-            log.append(f"{ctx} {AID_STATIONS[k]['name']}: nulled {splits[k]} "
-                       f"(cumulative pace beyond {MAX_CUMULATIVE_PACE} min/mi)")
-            splits[k] = None
+            null(k, f"cumulative pace beyond {MAX_CUMULATIVE_PACE} min/mi")
     return splits
 
 
@@ -202,11 +296,7 @@ def load_all_runners() -> tuple[list, list, list, dict, list]:
       finish_times  — elapsed finish times grouped by recorded sex
       scrub_log     — one line per repaired/removed split
     """
-    runners       = []
-    runner_years  = []
-    named_runners = []
-    finish_times  = {"men": [], "women": []}
-    scrub_log     = []
+    parsed = []
     for year, path in CSV_FILES:
         p = Path(path)
         if not p.exists():
@@ -214,32 +304,46 @@ def load_all_runners() -> tuple[list, list, list, dict, list]:
             continue
         with open(p, encoding="utf-8") as fh:
             rows = list(csv.reader(fh))
-        for row_num, row in enumerate(rows[2:], start=3):  # skip header and distance row
+        for row_num, row in enumerate(rows[2:], start=3):
             if len(row) < SPLIT_START_COL + N_STATIONS * 2:
                 continue
             splits = [
                 parse_time_to_minutes(row[SPLIT_START_COL + k * 2])
                 for k in range(N_STATIONS)
             ]
-            scrub_splits(splits, scrub_log, f"{year} row {row_num}")
-            if year < SPLIT_ROCK_FIRST_VALID_YEAR and splits[0] is not None:
-                splits[0] = None  # course change; summarized in the report
             if any(s is not None for s in splits):
-                runners.append(splits)
-                runner_years.append(year)
-                sex = row[5].strip().upper() if len(row) > 5 else ""
-                official_finish = parse_finish_time(row[1]) if len(row) > 1 else None
-                if (
-                    official_finish is not None
-                    and official_finish <= FINISH_CUTOFF_MINUTES
-                    and sex in {"M", "F"}
-                ):
-                    finish_times["men" if sex == "M" else "women"].append(official_finish)
-                first = row[3].strip() if len(row) > 3 else ""
-                last  = row[4].strip() if len(row) > 4 else ""
-                name  = f"{first} {last}".strip()
-                if name:
-                    named_runners.append({"name": name, "year": year, "splits": splits})
+                parsed.append((year, row_num, row, splits))
+
+    # Field medians come from crudely wrap-fixed data; medians are robust
+    # to the handful of errors the real scrub then removes.
+    med = field_medians([crude_wrap_fix(sp) for _, _, _, sp in parsed])
+
+    runners       = []
+    runner_years  = []
+    named_runners = []
+    finish_times  = {"men": [], "women": []}
+    scrub_log     = []
+    for year, row_num, row, splits in parsed:
+        scrub_splits(splits, med, scrub_log, f"{year} row {row_num}")
+        if year < SPLIT_ROCK_FIRST_VALID_YEAR and splits[0] is not None:
+            splits[0] = None  # course change; summarized in the report
+        if not any(s is not None for s in splits):
+            continue
+        runners.append(splits)
+        runner_years.append(year)
+        sex = row[5].strip().upper() if len(row) > 5 else ""
+        official_finish = parse_finish_time(row[1]) if len(row) > 1 else None
+        if (
+            official_finish is not None
+            and official_finish <= FINISH_CUTOFF_MINUTES
+            and sex in {"M", "F"}
+        ):
+            finish_times["men" if sex == "M" else "women"].append(official_finish)
+        first = row[3].strip() if len(row) > 3 else ""
+        last  = row[4].strip() if len(row) > 4 else ""
+        name  = f"{first} {last}".strip()
+        if name:
+            named_runners.append({"name": name, "year": year, "splits": splits})
     return runners, runner_years, named_runners, finish_times, scrub_log
 
 

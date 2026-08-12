@@ -1,34 +1,44 @@
-2014 row 17 Tettegouche: nulled 411 (section faster than 8.0 min/mi)
+2014 row 17 Silver Bay: nulled 357 (section 0.31x field median)
 2014 row 142 Sawbill: wrapped 270 -> 1710
 2014 row 151 Cramer Road: wrapped 261 -> 1701
-2015 row 5 Cramer Road: nulled 1043 (section faster than 8.0 min/mi)
-2015 row 9 Cramer Road: nulled 1043 (section faster than 8.0 min/mi)
-2015 row 15 Cramer Road: nulled 1043 (section faster than 8.0 min/mi)
-2015 row 107 Silver Bay: nulled 348 (section faster than 8.0 min/mi)
-2016 row 12 Sawbill: nulled 1380 (section faster than 8.0 min/mi)
-2016 row 28 Finland: nulled 770 (section faster than 8.0 min/mi)
-2016 row 34 Finland: nulled 770 (section faster than 8.0 min/mi)
-2016 row 42 Finland: nulled 770 (section faster than 8.0 min/mi)
-2016 row 56 Finland: nulled 770 (section faster than 8.0 min/mi)
-2016 row 95 Sawbill: nulled 1865 (section faster than 8.0 min/mi)
-2016 row 154 Finland: nulled 770 (section faster than 8.0 min/mi)
-2016 row 188 County Road 6: nulled 555 (section faster than 8.0 min/mi)
-2017 row 30 Silver Bay: nulled 324 (section faster than 8.0 min/mi)
+2015 row 5 Cramer Road: nulled 1043 (section 0.33x field median)
+2015 row 9 Sugarloaf: nulled 1002 (section 0.33x field median)
+2015 row 15 Cramer Road: nulled 1043 (section 0.33x field median)
+2015 row 34 Cramer Road: nulled 1074 (section 0.59x field median)
+2015 row 80 Crosby: nulled 1270 (section 0.40x field median)
+2015 row 107 Beaver Bay: nulled 321 (section 0.35x field median)
+2016 row 12 Temperance: nulled 1346 (section 0.29x field median)
+2016 row 28 Tettegouche: nulled 420 (section 0.54x field median)
+2016 row 28 County Road 6: nulled 710 (section 0.38x field median)
+2016 row 32 Cramer Road: nulled 1488 (section 0.47x field median)
+2016 row 34 County Road 6: nulled 710 (section 0.38x field median)
+2016 row 42 County Road 6: nulled 710 (section 0.38x field median)
+2016 row 56 County Road 6: nulled 710 (section 0.38x field median)
+2016 row 95 Temperance: nulled 1829 (section 0.31x field median)
+2016 row 154 County Road 6: nulled 710 (section 0.38x field median)
+2016 row 188 Tettegouche: nulled 505 (section 0.28x field median)
+2017 row 14 Crosby: nulled 1017 (section 0.38x field median)
+2017 row 30 Beaver Bay: nulled 297 (section 0.35x field median)
+2017 row 73 Temperance: nulled 1627 (section 0.36x field median)
 2017 row 77 Crosby: nulled 1131 (non-monotonic, +24h implausible)
-2017 row 81 Finland: nulled 870 (section faster than 8.0 min/mi)
+2017 row 77 Sonju Lake Rd: nulled 1234 (section 0.37x field median)
+2017 row 81 County Road 6: nulled 822 (section 0.30x field median)
 2017 row 101 Crosby: nulled 1131 (non-monotonic, +24h implausible)
+2017 row 101 Sonju Lake Rd: nulled 1234 (section 0.46x field median)
 2017 row 190 Temperance: wrapped 345 -> 1785
 2017 row 219 Cramer Road: wrapped 236 -> 1676
-2018 row 3 Split Rock: nulled 67 (section faster than 8.0 min/mi)
-2018 row 93 Finish: nulled 1980 (section faster than 8.0 min/mi)
+2018 row 3 Split Rock: nulled 67 (section 0.56x field median)
+2018 row 65 Silver Bay: nulled 365 (section 0.50x field median)
+2018 row 93 Oberg: nulled 1937 (section 0.29x field median)
 2018 row 178 Finland: nulled 1500 (cumulative pace beyond 28.0 min/mi)
 2018 row 219 Finland: nulled 1667 (cumulative pace beyond 28.0 min/mi)
-2019 row 5 Cramer Road: nulled 950 (section faster than 8.0 min/mi)
+2019 row 5 Cramer Road: nulled 950 (section 0.28x field median)
 2019 row 9 Finish: wrapped 38 -> 1478
 2019 row 10 Finish: wrapped 55 -> 1495
 2019 row 11 Finish: wrapped 55 -> 1495
 2019 row 15 Oberg: wrapped 21 -> 1461
 2019 row 16 Oberg: wrapped 21 -> 1461
+2019 row 18 Finish: nulled 1570 (final section 0.39x field median vs runner's 0.82x level)
 2019 row 23 Sawbill: wrapped 19 -> 1459
 2019 row 24 Sawbill: wrapped 45 -> 1485
 2019 row 25 Sawbill: wrapped 19 -> 1459
@@ -48,7 +58,7 @@
 2019 row 86 Cramer Road: wrapped 37 -> 1477
 2019 row 89 Cramer Road: wrapped 24 -> 1464
 2019 row 96 Cramer Road: wrapped 76 -> 1516
-2019 row 98 Cramer Road: nulled 1446 (section faster than 8.0 min/mi)
+2019 row 98 Sugarloaf: nulled 1406 (section 0.33x field median)
 2019 row 110 Cramer Road: wrapped 37 -> 1477
 2019 row 112 Cramer Road: wrapped 65 -> 1505
 2019 row 114 Cramer Road: wrapped 65 -> 1505
@@ -68,8 +78,8 @@
 2019 row 204 Sugarloaf: wrapped 148 -> 1588
 2019 row 206 Sugarloaf: wrapped 159 -> 1599
 2019 row 214 Crosby: wrapped 10 -> 1450
-2022 row 4 Beaver Bay: nulled 164 (section faster than 8.0 min/mi)
-2022 row 17 Beaver Bay: nulled 164 (section faster than 8.0 min/mi)
+2022 row 4 Beaver Bay: nulled 164 (section 0.50x field median)
+2022 row 17 Beaver Bay: nulled 164 (section 0.50x field median)
 2022 row 37 Temperance: wrapped 29 -> 1469
 2022 row 39 Temperance: wrapped 56 -> 1496
 2022 row 47 Temperance: wrapped 70 -> 1510
@@ -105,12 +115,14 @@
 2022 row 135 Sugarloaf: wrapped 120 -> 1560
 2022 row 136 Sugarloaf: wrapped 80 -> 1520
 2022 row 137 Sugarloaf: wrapped 120 -> 1560
-2023 row 40 Silver Bay: nulled 293 (section faster than 8.0 min/mi)
-2023 row 46 Finland: nulled 726 (section faster than 8.0 min/mi)
-2023 row 91 Crosby: nulled 1152 (section faster than 8.0 min/mi)
-2023 row 108 Crosby: nulled 1163 (section faster than 8.0 min/mi)
-2023 row 128 Crosby: nulled 1152 (section faster than 8.0 min/mi)
-2023 row 184 Cramer Road: nulled 1087 (section faster than 8.0 min/mi)
+2023 row 40 Beaver Bay: nulled 260 (section 0.42x field median)
+2023 row 46 County Road 6: nulled 688 (section 0.24x field median)
+2023 row 91 Finland: nulled 1087 (section 0.25x field median)
+2023 row 108 Sonju Lake Rd: nulled 1139 (section 0.26x field median)
+2023 row 128 Sonju Lake Rd: nulled 1139 (section 0.14x field median)
+2023 row 184 Finland: nulled 1086 (section 0.00x field median)
+2023 row 184 County Road 6: nulled 876 (section 0.27x field median)
+2023 row 184 Cramer Road: nulled 1087 (final section 0.45x field median vs runner's 1.18x level)
 2023 row 228 Tettegouche: nulled 2145 (cumulative pace beyond 28.0 min/mi)
 2023 row 229 Tettegouche: nulled 2145 (cumulative pace beyond 28.0 min/mi)
 2024 row 18 Sawbill: wrapped 1 -> 1441
@@ -121,6 +133,7 @@
 2024 row 28 Sawbill: wrapped 48 -> 1488
 2024 row 33 Temperance: wrapped 12 -> 1452
 2024 row 45 Temperance: wrapped 15 -> 1455
+2024 row 49 Temperance: nulled 1455 (section 0.42x field median)
 2024 row 79 Cramer Road: wrapped 35 -> 1475
 2024 row 82 Cramer Road: wrapped 35 -> 1475
 2024 row 84 Cramer Road: wrapped 70 -> 1510
@@ -144,8 +157,7 @@
 2025 row 26 Sawbill: wrapped 0 -> 1440
 2025 row 27 Sawbill: wrapped 19 -> 1459
 2025 row 28 Sawbill: wrapped 0 -> 1440
-2025 row 32 Tettegouche: nulled 354 (section faster than 8.0 min/mi)
-2025 row 32 County Road 6: nulled 486 (section faster than 8.0 min/mi)
+2025 row 32 Silver Bay: nulled 346 (section 0.05x field median)
 2025 row 36 Temperance: wrapped 30 -> 1470
 2025 row 38 Temperance: wrapped 14 -> 1454
 2025 row 40 Temperance: wrapped 37 -> 1477
@@ -155,8 +167,9 @@
 2025 row 71 Cramer Road: wrapped 7 -> 1447
 2025 row 80 Cramer Road: wrapped 45 -> 1485
 2025 row 84 Cramer Road: wrapped 28 -> 1468
+2025 row 97 Sawbill: nulled 1800 (section 0.48x field median)
 2025 row 111 Cramer Road: wrapped 80 -> 1520
-2025 row 111 Silver Bay: nulled 310 (section faster than 8.0 min/mi)
+2025 row 111 Beaver Bay: nulled 277 (section 0.42x field median)
 2025 row 170 Sugarloaf: wrapped 102 -> 1542
 2025 row 170 Cramer Road: wrapped 244 -> 1684
 2025 row 170 Temperance: wrapped 389 -> 1829
