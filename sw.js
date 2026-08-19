@@ -1,11 +1,10 @@
 const CACHE_PREFIX = 's100-spectator-';
-const CACHE_NAME = 's100-spectator-v45';
+const CACHE_NAME = 's100-spectator-v46';
 
 const CORE_ASSETS = [
   './',
   './index.html',
   './track.html',
-  './predict.html',
   './lookup.html',
   './explore.html',
   './compare.html',
@@ -16,7 +15,6 @@ const CORE_ASSETS = [
   './css/map.css',
   './assets/superior-trail-hero-north.jpg',
   './js/track.js',
-  './js/app.js',
   './js/lookup.js',
   './js/explore.js',
   './js/compare.js',
